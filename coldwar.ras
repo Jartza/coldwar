@@ -1,0 +1,184 @@
+program ColdWar;
+var
+   
+	// Address of bitmap (screen and characters)
+	@userdata $1000 $1FFF "Bitmap"
+
+	// Export sprites
+	@vbmexport "res/sprites/sprites.flf" "export/sprite_carbody.bin" 0 12 2 1
+	@vbmexport "res/sprites/sprites.flf" "export/sprite_wheel.bin"  80 88 1 1
+	@vbmexport "res/sprites/sprites.flf" "export/sprite_ground.bin" 160 162 1 1
+	@vbmexport "res/sprites/sprites.flf" "export/sprite_updown.bin" 120 128 1 1
+
+	// Resource memory
+	const addrCarBody:	address = $3800;
+	const addrWheel:	address = addrCarBody + 192;
+	const addrGround:	address = addrWheel + 64;
+	const addrUpdown:	address = addrGround + 16;
+
+	carSprite: incbin("export/sprite_carbody.bin", addrCarBody);
+	wheelSprite: incbin("export/sprite_wheel.bin", addrWheel);
+	groundTile: incbin("export/sprite_ground.bin", addrGround);
+	updownTile: incbin("export/sprite_updown.bin", addrUpdown);
+
+	@startblock $2000 "game"
+
+	// pre-shifted address-table for car body
+	carbody_L: array[] of integer = (
+		addrCarBody, addrCarBody+48, addrCarBody+96, addrCarBody+144
+	);
+	carbody_M: array[] of integer = (
+		addrCarBody+16, addrCarBody+64, addrCarBody+112, addrCarBody+160
+	);
+	carbody_R: array[] of integer = (
+		addrCarBody+32, addrCarBody+80, addrCarBody+128, addrCarBody+176
+	);
+	
+	// Address-table for ground tile
+	ground_T: array[] of integer = (
+		addrGround, addrGround + 8
+	);
+
+	// Address-table for up'n'down tile
+	updown_T: array[] of integer = (
+		addrUpDown, addrUpDown+8, addrUpDown+16, addrUpDown+24,
+		addrUpDown+32, addrUpDown+40, addrUpDown+48, addrUpDown+56
+	);
+
+	// pre-shifter address-table for single wheel
+	wheel_L: array[] of integer = (
+		addrWheel, addrWheel+16, addrWheel+32, addrWheel+48
+	);
+	wheel_R: array[] of integer = (
+		addrWheel+8, addrWheel+24, addrWheel+40, addrWheel+56
+	);
+
+	const d_car: 	byte = 0;
+	const d_grnd:	byte = 1;
+
+	drawTree: array[] of byte = (
+		0, 0
+	);
+
+	const MULTICOLOR: byte = 8;
+
+	x: byte = 20;
+	y: byte = 156;
+	oldx: byte = 168;
+	oldy: byte = 156;
+	dir: byte = 2;
+	delay: byte;
+	clr: byte = 0;
+	grndtile: byte = 0;
+	updowntile: byte = 0;
+	updowndir: byte = 1;
+	groundpos: byte = 0;
+	groundmoved: byte = 0;
+	i: byte = 0;
+	p1: pointer;
+	scroffset: byte = 0;
+	yoff: byte = 0;
+	yoff_r: byte = 0;
+	yoff_l: byte = 0;
+
+procedure drawcar();
+begin
+	StartIRQ(0);  // store the processors registers
+
+	scroffset := scroffset + 1;
+
+	//screen_bg_color := BLACK + SCREEN_BG_BLACK;
+
+	// Clear previous car sprite
+	vbmSetPosition2(oldx, oldy);
+	vbmDrawSpriteSliceE(carbody_L, 0, 8);
+	vbmNextColumn();
+	vbmDrawSpriteSliceE(carbody_M, 0, 8);
+	vbmNextColumn();
+	vbmDrawSpriteSliceE(carbody_R, 0, 8);
+	vbmSetPosition2(oldx, oldy + 10);
+	vbmDrawSprite8E(wheel_L, wheel_R);
+	vbmSetPosition2(oldx+10, oldy + 10);
+	vbmDrawSprite8E(wheel_L, wheel_R);
+
+	// Scroll the landscape
+	if (scroffset & 1) then
+	begin
+		vbmScreenShiftLeft(176,192);
+		vbmScreenShiftLeft(176,192);
+	end;
+	
+	// Draw ground
+	if (drawTree[d_grnd] = 1 and scroffset & 7 = 0) then
+	begin
+		vbmSetPosition2(152, 176);
+		p1 := int2ptr(updown_T[updowntile]);
+		vbmDrawTile(p1);
+		drawTree[d_grnd] := 0;
+	end;
+
+	// Draw new car sprite
+	vbmSetPosition2(x, y);
+	vbmDrawSpriteSliceE(carbody_L, 0, 8);
+	vbmNextColumn();
+	vbmDrawSpriteSliceE(carbody_M, 0, 8);
+	vbmNextColumn();
+	vbmDrawSpriteSliceE(carbody_R, 0, 8);
+	vbmSetPosition2(x, y + 10);
+	vbmDrawSprite8E(wheel_L, wheel_R);
+	vbmSetPosition2(x+10, y + 10);
+	vbmDrawSprite8E(wheel_L, wheel_R);
+	drawTree[d_car] := 0;
+	oldx := x;
+	oldy := y;
+
+	//screen_bg_color := BLUE + SCREEN_BG_BLACK;
+
+	closeIRQ(); // restore the processor registers and complete our interrupt
+end;
+
+begin
+	vbmSetDisplayMode(1);
+	vbmClear(0);
+	vbmClearColor(WHITE + MULTICOLOR);
+	AUX_COLOR_AND_VOLUME := RED * 15 + 15;
+	screen_bg_color := BLUE + SCREEN_BG_BLACK;
+
+	for i:=0 to 20 do
+	begin
+		vbmSetPosition2(i*8, 184);
+		p1 := int2ptr(ground_T[grndtile]);
+		vbmDrawTile(p1);
+		grndtile := grndtile xor 1;
+	end;
+
+	DisableVIC20IRQ();
+	
+	// Set up an raster interrupt to call outiside visible screen,
+	// params: IRQ function, raster line, PAL/NTSC (0/1)
+	VIARasterIRQ(drawcar(), 110, 0);
+
+
+	while(true) offpage do
+	begin
+		if (drawTree[d_car] = 0 and scroffset & 1 = 0) then
+		begin
+			// calculate new y offset for buggy and wheels
+			for i := 0 to 8 do if (vbmTestPixel(x+8, 184-i) > 0) then yoff := i;
+			for i := 0 to 8 do if (vbmTestPixel(x, 184-i) > 0) then yoff_l := i;
+			for i := 0 to 8 do if (vbmTestPixel(x+16, 184-i) > 0) then yoff_r := i;
+			y := 164 - yoff;
+			x := x + dir;
+			if (x = 20 or x = 110) then dir:=dir xor 252;
+			drawTree[d_car] := 1;
+		end;
+		if (drawTree[d_grnd] = 0) then
+		begin
+			drawTree[d_grnd] := 1;
+			updowntile := updowntile + updowndir;
+			if (updowntile = 7 or updowntile = 0) then begin
+				updowndir := updowndir xor 254;
+			end;
+		end;
+	end;
+end.
