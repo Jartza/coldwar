@@ -56,8 +56,15 @@ var
 		addrWheel+8, addrWheel+24, addrWheel+40, addrWheel+56
 	);
 
+	// Draw tree index
 	const d_car: 	byte = 0;
 	const d_grnd:	byte = 1;
+
+	// State index
+	const s_move:	byte = 0;
+	const s_jump:	byte = 1;
+	const s_stat:	byte = 2;
+
 
 	drawTree: array[] of byte = (
 		0, 0
@@ -91,6 +98,7 @@ var
 	yoff_r: byte = 0;
 	yoff_l: byte = 0;
 	wheelbump: byte = 0;
+	state: byte = 0;
     message: cstring = ("COLD WAR - some buggy game");
 
 procedure drawcar();
