@@ -5,21 +5,28 @@
 	.byte    $29, $00, $00, $00
 	ORG $1210
 ColdWar
-	jmp block94813
+	jmp block42965
  ; Temp vars section
  ; Temp vars section ends
 	org $2000
-carbody_L	dc.w $03800, $03830, $03860, $03890
-carbody_M	dc.w $03810, $03840, $03870, $038a0
-carbody_R	dc.w $03820, $03850, $03880, $038b0
-ground_T	dc.w $03900, $03908
-updown_T	dc.w $03910, $03918, $03920, $03928, $03930, $03938, $03940, $03948
+carbody_L	dc.w $03000, $03030, $03060, $03090
+carbody_M	dc.w $03010, $03040, $03070, $030a0
+carbody_R	dc.w $03020, $03050, $03080, $030b0
+ground_T	dc.w $03100, $03108
+updown_T	dc.w $03110, $03118, $03120, $03128, $03130, $03138, $03140, $03148
 	dc.w 
-wheel_L	dc.w $038c0, $038d0, $038e0, $038f0
-wheel_R	dc.w $038c8, $038d8, $038e8, $038f8
+wheel_L	dc.w $030c0, $030d0, $030e0, $030f0
+wheel_R	dc.w $030c8, $030d8, $030e8, $030f8
 drawTree	dc.b $00, $00
-x	dc.b	$14
+scnt	dc.b	$00
+gcnt	dc.b	$00
+mcnt	dc.b	$00
+x	dc.b	$32
 y	dc.b	$9c
+yr	dc.b	$a0
+yl	dc.b	$a0
+oldyr	dc.b	$b4
+oldyl	dc.b	$b4
 oldx	dc.b	$a8
 oldy	dc.b	$9c
 dir	dc.b	$02
@@ -32,10 +39,14 @@ groundpos	dc.b	$00
 groundmoved	dc.b	$00
 i	dc.b	$00
 p1	= $64
-scroffset	dc.b	$00
 yoff	dc.b	$00
 yoff_r	dc.b	$00
 yoff_l	dc.b	$00
+wheelbump	dc.b	$00
+message	
+	dc.b	$03, $0f, $0c, $04, $20, $17, $01, $12, $20
+	dc.b	$2d, $20, $13, $0f, $0d, $05, $20, $02, $15
+	dc.b	$07, $07, $19, $20, $07, $01, $0d, $05, 0
 	
 	
 	; ***********  Defining procedure : init16x8mul
@@ -216,6 +227,102 @@ vbmDrawForLoopResetChar
 	rts
 	
 	
+	; ***********  Defining procedure : initVbmBlot
+	;    Procedure type : User-defined procedure
+	
+	; VBM Blot mask
+vbmBlotBit    dc.b $c0, $30, $0c, $03
+vbmDrawBlot
+	; Accumulator contains X position
+	lsr   ; divide by 8 to find column number
+	lsr
+	lsr
+	tax
+	lda vbmScrL,x   ; Address of table lo
+	ldy vbmScrH,x   ; Address of table hi
+	sta screenmemory   ; Set sceenmemory to start of column lo
+	sty screenmemory+1 ; Set sceenmemory to start of column hi
+	lda vbmX
+	and #6   ; find offset for dot
+	lsr
+	tax
+	lda vbmBlotBit,x   ; get blot pattern
+	ldy vbmY  ; draw dot in row
+	ora (screenmemory),y
+	sta (screenmemory),y
+	iny
+	lda vbmBlotBit,x   ; get blot pattern for second row
+	ora (screenmemory),y
+	sta (screenmemory),y
+	rts
+vbmClearBlot
+	; Accumulator contains X position
+	lsr   ; divide by 8 to find column number
+	lsr
+	lsr
+	tax
+	lda vbmScrL,x   ; Address of table lo
+	ldy vbmScrH,x   ; Address of table hi
+	sta screenmemory   ; Set sceenmemory to start of column lo
+	sty screenmemory+1 ; Set sceenmemory to start of column hi
+	lda vbmX
+	and #6   ; find offset for dot
+	lsr
+	tax
+	lda vbmBlotBit,x   ; get blot pattern
+	eor #$ff  ; invert
+	ldy vbmY  ; draw dot in row
+	and (screenmemory),y
+	sta (screenmemory),y
+	iny
+	lda vbmBlotBit,x   ; get blot pattern for second row
+	eor #$ff  ; invert
+	and (screenmemory),y
+	sta (screenmemory),y
+	rts
+vbmDrawBlotE
+	; Accumulator contains X position
+	lsr   ; divide by 8 to find column number
+	lsr
+	lsr
+	tax
+	lda vbmScrL,x   ; Address of table lo
+	ldy vbmScrH,x   ; Address of table hi
+	sta screenmemory   ; Set sceenmemory to start of column lo
+	sty screenmemory+1 ; Set sceenmemory to start of column hi
+	lda vbmX
+	and #6   ; find offset for dot
+	lsr
+	tax
+	lda vbmBlotBit,x   ; get blot pattern
+	ldy vbmY  ; draw dot in row
+	eor (screenmemory),y
+	sta (screenmemory),y
+	iny
+	lda vbmBlotBit,x   ; get blot pattern for second row
+	eor (screenmemory),y
+	sta (screenmemory),y
+	rts
+vbmTestPixel2
+	; Accumulator contains X position
+	lsr   ; divide by 8 to find column number
+	lsr
+	lsr
+	tax
+	lda vbmScrL,x   ; Address of table lo
+	ldy vbmScrH,x   ; Address of table hi
+	sta screenmemory   ; Set sceenmemory to start of column lo
+	sty screenmemory+1 ; Set sceenmemory to start of column hi
+	lda vbmX
+	and #6   ; find offset for dot
+	lsr
+	tax
+	lda vbmBlotBit,x   ; get blot pattern (double pixel, even aligned)
+	ldy vbmY  ; draw dot in row
+	and (screenmemory),y
+	rts
+	
+	
 	; ***********  Defining procedure : initVbmClear
 	;    Procedure type : User-defined procedure
 	
@@ -253,82 +360,120 @@ vbmClearXOverflow
 	rts
 	
 	
-	; ***********  Defining procedure : initVbmDot
+	; ***********  Defining procedure : initVbmDrawSmallTextE
 	;    Procedure type : User-defined procedure
 	
-	; VBM Dot mask
-vbmDotBit    dc.b $80, $40, $20, $10, $08, $04, $02, $01
-vbmDrawDot
-	; Accumulator contains X position
-	lsr   ; divide by 8 to find column number
-	lsr
-	lsr
+	; Draw text characters to the bitmap using a zero terminated CSTRING with EOR operation
+	; CSTRING    = $80
+	; Font chars = $82
+	; Temp addr  = $84 - used to calculate char address
+vbmDrawSmallTextE
+vbmDSTXE_Xloop
+	; calculate next screen memory position
+	lda vbmX
+	lsr ; divde x by 2 (2 chars per character cell)
 	tax
+	; Wor out from LSR if odd or even pattern
+	bcs vbmDSTXE_Odd
+	lda #$f0 ; even, use left side of font
+	bcc vbmDSTXE_Even ; we know carry will be clear
+vbmDSTXE_Odd
+	lda #$0f ; odd, use right side of font
+vbmDSTXE_Even
+	sta vbmT ; store mask to use for later
 	lda vbmScrL,x   ; Address of table lo
 	ldy vbmScrH,x   ; Address of table hi
-	sta screenmemory   ; Set sceenmemory to start of column lo
-	sty screenmemory+1 ; Set sceenmemory to start of column hi
-	lda vbmX
-	and #7   ; find offset for dot
-	tax
-	lda vbmDotBit,x   ; get dot pattern
-	ldy vbmY  ; draw dot in row
-	ora (screenmemory),y
-	sta (screenmemory),y
-	rts
-vbmClearDot
-	; Accumulator contains X position
-	lsr   ; divide by 8 to find column number
-	lsr
-	lsr
-	tax
-	lda vbmScrL,x   ; Address of table lo
-	ldy vbmScrH,x   ; Address of table hi
-	sta screenmemory   ; Set sceenmemory to start of column lo
-	sty screenmemory+1 ; Set sceenmemory to start of column hi
-	lda vbmX
-	and #7   ; find offset for dot
-	tax
-	lda vbmDotBit,x   ; get dot pattern
-	eor #$ff  ; invert it
-	ldy vbmY  ; clear dot in row
-	and (screenmemory),y
-	sta (screenmemory),y
-	rts
-vbmDrawDotE
-	; Accumulator contains X position
-	lsr   ; divide by 8 to find column number
-	lsr
-	lsr
-	tax
-	lda vbmScrL,x   ; Address of table lo
-	ldy vbmScrH,x   ; Address of table hi
-	sta screenmemory   ; Set sceenmemory to start of column lo
-	sty screenmemory+1 ; Set sceenmemory to start of column hi
-	lda vbmX
-	and #7   ; find offset for dot
-	tax
-	lda vbmDotBit,x   ; get dot pattern
-	ldy vbmY  ; draw dot in row
+	clc
+	adc vbmY		; Add Y offset
+	bcc vbmDSTXE_NSP_NoOverflow
+	iny
+vbmDSTXE_NSP_NoOverflow
+	sta screenmemory
+	sty screenmemory+1
+vbmDSTXE_GetCharNum
+	; convert text number (0-255) * 8 = memory offset
+	ldy #0
+	lda ($80),y		; get char from current position in CSTRING
+	bne vbmDSTXE_NotEnd
+	rts ; if =0, we are end of the cstring
+vbmDSTXE_NotEnd
+	sta $84
+	sty $84+1
+	asl $84
+	rol $84+1 ;x2
+	asl $84
+	rol $84+1 ;x4
+	asl $84
+	rol $84+1 ;x8
+	lda $84
+	clc
+	adc $82  ; add tile low address
+	sta $84
+	lda $84+1
+	adc $82+1 ; add tile high address
+	sta $84+1
+vbmDSTXE_DrawChar
+	; y reg is ZERO from ldy #0 in GetTileNum
+	lda ($84),y
+	and vbmT
 	eor (screenmemory),y
 	sta (screenmemory),y
-	rts
-vbmTestPixel
-	; Accumulator contains X position
-	lsr   ; divide by 8 to find column number
-	lsr
-	lsr
-	tax
-	lda vbmScrL,x   ; Address of table lo
-	ldy vbmScrH,x   ; Address of table hi
-	sta screenmemory   ; Set sceenmemory to start of column lo
-	sty screenmemory+1 ; Set sceenmemory to start of column hi
-	lda vbmX
-	and #7   ; find offset for dot
-	tax
-	lda vbmDotBit,x   ; get dot pattern
-	ldy vbmY  ; get row
-	and (screenmemory),y ; AND with screenmemory to get pixel value
+	iny
+	lda ($84),y
+	and vbmT
+	eor (screenmemory),y
+	sta (screenmemory),y
+	iny
+	lda ($84),y
+	and vbmT
+	eor (screenmemory),y
+	sta (screenmemory),y
+	iny
+	lda ($84),y
+	and vbmT
+	eor (screenmemory),y
+	sta (screenmemory),y
+	iny
+	lda ($84),y
+	and vbmT
+	eor (screenmemory),y
+	sta (screenmemory),y
+	iny
+	lda ($84),y
+	and vbmT
+	eor (screenmemory),y
+	sta (screenmemory),y
+	iny
+	lda ($84),y
+	and vbmT
+	eor (screenmemory),y
+	sta (screenmemory),y
+	iny
+	lda ($84),y
+	and vbmT
+	eor (screenmemory),y
+	sta (screenmemory),y
+vbmDSTXE_NextChar
+	clc
+	inc $80  ; low byte
+	bne vbmDSTXE_NTM_NoOverflow
+	inc $80+1  ; high byte
+vbmDSTXE_NTM_NoOverflow
+	; next x pos on screen
+	inc vbmX
+	lda #40   ; 0-39 columns, 40 means exceeded right of screen
+	cmp vbmX  ; has x pos exceeded?
+	beq vbmDSTXE_NextLine  ;
+	jmp vbmDSTXE_Xloop  ; no, draw next char
+vbmDSTXE_NextLine
+	; yes, set x back to 0 and inc vbmY by line height (pixels)
+	lda #0
+	sta vbmX
+	lda vbmY
+	clc
+	adc vbmI
+	sta vbmY
+	jmp vbmDSTXE_Xloop
 	rts
 	
 	
@@ -624,7 +769,49 @@ mul_skip
 mul_end
 	txa
 	rts
-initeightbitmul_multiply_eightbit29057
+initeightbitmul_multiply_eightbit29023
+	rts
+	
+	
+	; ***********  Defining procedure : initjoy1
+	;    Procedure type : Built-in function
+	;    Requires initialization : no
+	
+	; ----------
+	; ReadJoy1 and ReadJoy2 (on supported platforms)
+	; populates joy1 and joy1pressed which can be tested by AND-ing with the following constants:
+;JOY_DOWN  = %00000100
+;JOY_UP    = %00000010
+;JOY_LEFT  = %00001000
+;JOY_RIGHT = %00000001
+;JOY_FIRE  = %00010000
+VIC20_PORTACASS = $911F
+VIC20_PORTBVIA2 = $9120  ; Port B 6522 2 value (joystick)
+VIC20_PORTBVIA2d = $9122 ; Port B 6522 2 direction (joystick)
+joy1 .byte 0
+joy1last .byte 0
+joy1pressed .byte 0
+callReadJoy1
+	LDA VIC20_PORTACASS
+	EOR #$FF
+	AND #$3C
+	LDX #$7F
+	SEI
+	STX VIC20_PORTBVIA2d
+	LDY VIC20_PORTBVIA2
+	BMI initjoy1_JoySkip23918
+	ORA #$02
+initjoy1_JoySkip23918
+	LDX #$FF
+	STX VIC20_PORTBVIA2d
+	CLI
+	LSR
+	STA joy1
+	eor joy1last
+	and joy1
+	sta joy1pressed
+	lda joy1
+	sta joy1last
 	rts
 	
 	
@@ -632,7 +819,7 @@ initeightbitmul_multiply_eightbit29057
 	;    Procedure type : Built-in function
 	;    Requires initialization : no
 	
-	jmp initmoveto_moveto14276
+	jmp initmoveto_moveto69751
 screenmemory =  $fe
 screen_x = $80
 screen_y = $82
@@ -660,7 +847,7 @@ sydone
 sxdone
 	sta screenmemory
 	rts
-initmoveto_moveto14276
+initmoveto_moveto69751
 	rts
 	
 ; // Address of bitmap(screen and characters)
@@ -684,9 +871,6 @@ drawcar
 	pha
 	
 ; // store the processors registers
-	; Assigning single variable : scroffset
-	inc scroffset
-	
 ; //screen_bg_color := BLACK + SCREEN_BG_BLACK;
 ; // Clear previous car sprite
 	; ----------
@@ -747,12 +931,7 @@ drawcar
 	; ----------
 	; vbmSetPosition2 x, y
 	; y is complex
-	; 8 bit binop
-	; Add/sub where right value is constant number
-	lda oldy
-	clc
-	adc #10
-	 ; end add / sub var with constant
+	lda oldyl
 	sta vbmY
 	; x is complex
 	lda oldx
@@ -775,12 +954,7 @@ drawcar
 	; ----------
 	; vbmSetPosition2 x, y
 	; y is complex
-	; 8 bit binop
-	; Add/sub where right value is constant number
-	lda oldy
-	clc
-	adc #10
-	 ; end add / sub var with constant
+	lda oldyr
 	sta vbmY
 	; x is complex
 	; 8 bit binop
@@ -805,19 +979,6 @@ drawcar
 	lda wheel_R+1,x
 	sta $82+1
 	jsr vbmDrawSprite8E
-	; Binary clause Simplified: NOTEQUALS
-	; 8 bit binop
-	; Add/sub where right value is constant number
-	lda scroffset
-	and #1
-	 ; end add / sub var with constant
-	
-	; Compare with pure num / var optimization
-	cmp #$0;keep
-	beq drawcar_elsedoneblock55864
-drawcar_ConditionalTrueBlock25778
-	
-; // Scroll the landscape
 	; Screen Shift Left
 	lda #192
 	sta vbmY
@@ -828,8 +989,6 @@ drawcar_ConditionalTrueBlock25778
 	sta vbmY
 	ldx #176 ; optimized, look out for bugs
 	jsr vbmScreenShiftLeft
-drawcar_elseblock532
-drawcar_elsedoneblock55864
 	; Binary clause: EQUALS
 	; Load Byte array
 	ldx #$1
@@ -838,23 +997,18 @@ drawcar_elsedoneblock55864
 	; Compare with pure num / var optimization
 	cmp #$1;keep
 	; BC done
-	bne drawcar_elseblock95361
-drawcar_binaryclausesuccess99025
+	bne drawcar_elseblock59795
+drawcar_binaryclausesuccess47244
 	; Binary clause: EQUALS
-	; 8 bit binop
-	; Add/sub where right value is constant number
-	lda scroffset
-	and #7
-	 ; end add / sub var with constant
-	
+	lda gcnt
 	; Compare with pure num / var optimization
 	cmp #$0;keep
 	; BC done
-	bne drawcar_elseblock95361
-drawcar_binaryclausesuccess29121
-drawcar_ConditionalTrueBlock39479
+	bne drawcar_elseblock59795
+drawcar_binaryclausesuccess84134
+drawcar_ConditionalTrueBlock24750
 	
-; // Draw ground
+; // Draw new ground piece
 	; ----------
 	; vbmSetPosition2 x, y
 	lda #176
@@ -902,8 +1056,8 @@ drawcar_ConditionalTrueBlock39479
 	; Assigning single variable : drawTree
 	lda #0
 	sta drawTree+#$1
-drawcar_elseblock95361
-drawcar_elsedoneblock14788
+drawcar_elseblock59795
+drawcar_elsedoneblock91745
 	
 ; // Draw new car sprite
 	; ----------
@@ -964,12 +1118,7 @@ drawcar_elsedoneblock14788
 	; ----------
 	; vbmSetPosition2 x, y
 	; y is complex
-	; 8 bit binop
-	; Add/sub where right value is constant number
-	lda y
-	clc
-	adc #10
-	 ; end add / sub var with constant
+	lda yl
 	sta vbmY
 	; x is complex
 	lda x
@@ -992,12 +1141,7 @@ drawcar_elsedoneblock14788
 	; ----------
 	; vbmSetPosition2 x, y
 	; y is complex
-	; 8 bit binop
-	; Add/sub where right value is constant number
-	lda y
-	clc
-	adc #10
-	 ; end add / sub var with constant
+	lda yr
 	sta vbmY
 	; x is complex
 	; 8 bit binop
@@ -1031,8 +1175,44 @@ drawcar_elsedoneblock14788
 	; Assigning single variable : oldy
 	lda y
 	sta oldy
+	; Assigning single variable : oldyr
+	lda yr
+	sta oldyr
+	; Assigning single variable : oldyl
+	lda yl
+	sta oldyl
 	
 ; //screen_bg_color := BLUE + SCREEN_BG_BLACK;
+; // Increase counters
+	inc scnt
+	; Assigning single variable : gcnt
+	; 8 bit binop
+	; Add/sub where right value is constant number
+	; 8 bit binop
+	; Add/sub where right value is constant number
+	lda gcnt
+	clc
+	adc #1
+	 ; end add / sub var with constant
+	
+	and #3
+	 ; end add / sub var with constant
+	
+	sta gcnt
+	; Assigning single variable : mcnt
+	; 8 bit binop
+	; Add/sub where right value is constant number
+	; 8 bit binop
+	; Add/sub where right value is constant number
+	lda mcnt
+	clc
+	adc #1
+	 ; end add / sub var with constant
+	
+	and #1
+	 ; end add / sub var with constant
+	
+	sta mcnt
 	; CloseIRQ
 	pla
 	tay
@@ -1041,7 +1221,7 @@ drawcar_elsedoneblock14788
 	pla
 	 jmp $eabf     ; return to normal IRQ	
 	rts
-block94813
+block42965
 	
 ; // restore the processor registers and complete our interrupt
 	; Set special display mode for VBM bitmap graphics
@@ -1058,10 +1238,10 @@ block94813
 	sta screenmemory
 	lda #9
 	ldy #241 ; colour mem to clear (stops at zero so +1)
-MainProgram_vbmCC_loop97281
+MainProgram_vbmCC_loop91723
 	sta (screenmemory),y
 	dey
-	bne MainProgram_vbmCC_loop97281
+	bne MainProgram_vbmCC_loop91723
 	; Assigning memory location
 	; Assigning single variable : $900e
 	lda #45
@@ -1075,7 +1255,7 @@ MainProgram_vbmCC_loop97281
 	; Assigning single variable : i
 	lda #0
 	sta i
-MainProgram_for27618
+MainProgram_for11572
 	; ----------
 	; vbmSetPosition2 x, y
 	lda #184
@@ -1139,8 +1319,35 @@ MainProgram_for27618
 	inc i
 	lda #20
 	cmp i ;keep
-	bne MainProgram_for27618
-MainProgram_forLoopDone64312
+	bne MainProgram_for11572
+MainProgram_forLoopDone71896
+	
+; // draw text
+	; Draw 4x8 text to the bitmap with EOR operation
+	; Text to use:
+	lda #<message
+	sta $80
+	lda #>message
+	sta $80+1
+	; Font characters to use:
+	lda #<smallFont
+	sta $82
+	lda #>smallFont
+	sta $82+1
+	lda #6
+	sta vbmX ; x position
+	lda #1
+	sta vbmY ; y position in pixels
+	lda #6
+	sta vbmI ; line height in pixels
+	jsr vbmDrawSmallTextE
+	lda #1
+	ldx #0
+MainProgram_fill10745
+	sta $9400,x
+	inx
+	cpx #20
+	bne MainProgram_fill10745
 	lda #$7f
 	sta $912e ; disable and acknowledge interrupts
 	sta $912d
@@ -1151,39 +1358,40 @@ MainProgram_forLoopDone64312
 	sta pointers_vic_raster+1
 	lda #>drawcar
 	sta pointers_vic_raster+6
-	ldx #110 ; optimized, look out for bugs
+	ldx #112 ; optimized, look out for bugs
 	lda #0
-	bne MainProgram_viarasterirq_ntsc_timing25119
+	bne MainProgram_viarasterirq_ntsc_timing44607
 	lda #$86
 	sta timers_vic_raster+1
 	lda #$56
 	sta timers_vic_raster+3
 	jsr A0_vic_raster
-	jmp MainProgram_viarasterirq_end86748
-MainProgram_viarasterirq_ntsc_timing25119
+	jmp MainProgram_viarasterirq_end12993
+MainProgram_viarasterirq_ntsc_timing44607
 	lda #$43
 	sta timers_vic_raster+1
 	lda #$42
 	sta timers_vic_raster+3
 	jsr A0_vic_raster
-MainProgram_viarasterirq_end86748
-MainProgram_while9055
+MainProgram_viarasterirq_end12993
+MainProgram_while86748
 	; Binary clause: NOTEQUALS
 	lda #1
 	; Compare with pure num / var optimization
 	cmp #$0;keep
 	; BC done
-	beq MainProgram_binaryclausefailed48910
-MainProgram_binaryclausesuccess12246
+	beq MainProgram_binaryclausefailed77727
+MainProgram_binaryclausesuccess56022
 	lda #1; success
-	jmp MainProgram_binaryclausefinished93438
-MainProgram_binaryclausefailed48910
+	jmp MainProgram_binaryclausefinished13383
+MainProgram_binaryclausefailed77727
 	lda #0 ; failed state
-MainProgram_binaryclausefinished93438
+MainProgram_binaryclausefinished13383
 	cmp #1
-	beq MainProgram_ConditionalTrueBlock51692
-	jmp MainProgram_elsedoneblock55758
-MainProgram_ConditionalTrueBlock51692
+	beq MainProgram_ConditionalTrueBlock65161
+	jmp MainProgram_elsedoneblock96532
+MainProgram_ConditionalTrueBlock65161
+	jsr callReadJoy1
 	; Binary clause: EQUALS
 	; Load Byte array
 	ldx #$0
@@ -1192,50 +1400,30 @@ MainProgram_ConditionalTrueBlock51692
 	; Compare with pure num / var optimization
 	cmp #$0;keep
 	; BC done
-	bne MainProgram_binaryclausefailed88614
-MainProgram_binaryclausesuccess37250
+	bne MainProgram_binaryclausefailed21489
+MainProgram_binaryclausesuccess90691
 	lda #1; success
-	jmp MainProgram_binaryclausefinished93124
-MainProgram_binaryclausefailed88614
+	jmp MainProgram_binaryclausefinished39036
+MainProgram_binaryclausefailed21489
 	lda #0 ; failed state
-MainProgram_binaryclausefinished93124
-MainProgram_logical_class_temp_var66711 = $88
-	sta MainProgram_logical_class_temp_var66711
-	; Binary clause: EQUALS
-	; 8 bit binop
-	; Add/sub where right value is constant number
-	lda scroffset
-	and #1
-	 ; end add / sub var with constant
-	
-	; Compare with pure num / var optimization
-	cmp #$0;keep
-	; BC done
-	bne MainProgram_binaryclausefailed37809
-MainProgram_binaryclausesuccess41544
-	lda #1; success
-	jmp MainProgram_binaryclausefinished82538
-MainProgram_binaryclausefailed37809
-	lda #0 ; failed state
-MainProgram_binaryclausefinished82538
-	and MainProgram_logical_class_temp_var66711
+MainProgram_binaryclausefinished39036
 	cmp #1
-	beq MainProgram_ConditionalTrueBlock52461
-	jmp MainProgram_elsedoneblock69728
-MainProgram_ConditionalTrueBlock52461
+	beq MainProgram_ConditionalTrueBlock65151
+	jmp MainProgram_elsedoneblock11906
+MainProgram_ConditionalTrueBlock65151
 	; Assigning single variable : i
 	lda #0
 	sta i
-MainProgram_for22969
-	; Binary clause Simplified: GREATER
+MainProgram_for26614
+	; Binary clause Simplified: EQUALS
 	; ----------
-	; vbmTestPixel x, y
+	; vbmTestPixel2 x, y  - can be used to test for multi-color mode pixels
 	; y is complex
 	; 8 bit binop
 	; Add/sub where right value is constant number
-	lda #184
-	sec
-	sbc i
+	lda #176
+	clc
+	adc i
 	 ; end add / sub var with constant
 	sta vbmY
 	; x is complex
@@ -1246,73 +1434,96 @@ MainProgram_for22969
 	adc #8
 	 ; end add / sub var with constant
 	sta vbmX
-	jsr vbmTestPixel ; returns A = 1 or 0
+	jsr vbmTestPixel2
 	
 	; Compare with pure num / var optimization
 	cmp #$0;keep
-	bcc MainProgram_elsedoneblock76349
-	beq MainProgram_elsedoneblock76349
-MainProgram_ConditionalTrueBlock34894
+	bne MainProgram_elsedoneblock7732
+MainProgram_ConditionalTrueBlock8021
 	
+; //screen_bg_color := BLACK + SCREEN_BG_BLACK;
 ; // calculate new y offset for buggy and wheels
 	; Assigning single variable : yoff
 	lda i
 	sta yoff
-MainProgram_elseblock64216
-MainProgram_elsedoneblock76349
+MainProgram_elseblock73997
+MainProgram_elsedoneblock7732
 	inc i
 	lda #8
 	cmp i ;keep
-	bne MainProgram_for22969
-MainProgram_forLoopDone91456
+	bne MainProgram_for26614
+MainProgram_forLoopDone46737
+	; Assigning single variable : y
+	; 8 bit binop
+	; Add/sub where right value is constant number
+	lda #156
+	clc
+	adc yoff
+	 ; end add / sub var with constant
+	
+	sta y
 	; Assigning single variable : i
 	lda #0
 	sta i
-MainProgram_for6548
-	; Binary clause Simplified: GREATER
+MainProgram_for22929
+	; Binary clause Simplified: EQUALS
 	; ----------
-	; vbmTestPixel x, y
+	; vbmTestPixel2 x, y  - can be used to test for multi-color mode pixels
 	; y is complex
 	; 8 bit binop
 	; Add/sub where right value is constant number
-	lda #184
-	sec
-	sbc i
+	lda #176
+	clc
+	adc i
 	 ; end add / sub var with constant
 	sta vbmY
 	; x is complex
 	lda x
 	sta vbmX
-	jsr vbmTestPixel ; returns A = 1 or 0
+	jsr vbmTestPixel2
 	
 	; Compare with pure num / var optimization
 	cmp #$0;keep
-	bcc MainProgram_elsedoneblock92564
-	beq MainProgram_elsedoneblock92564
-MainProgram_ConditionalTrueBlock84524
-	; Assigning single variable : yoff_l
+	bne MainProgram_elsedoneblock924
+MainProgram_ConditionalTrueBlock50042
+	; Assigning single variable : yoff
 	lda i
-	sta yoff_l
-MainProgram_elseblock40925
-MainProgram_elsedoneblock92564
+	sta yoff
+MainProgram_elseblock6958
+MainProgram_elsedoneblock924
 	inc i
 	lda #8
 	cmp i ;keep
-	bne MainProgram_for6548
-MainProgram_forLoopDone73181
+	bne MainProgram_for22929
+MainProgram_forLoopDone87465
+	; Assigning single variable : yl
+	; 8 bit binop
+	; Add/sub where right value is constant number
+	; 8 bit binop
+	; Add/sub where right value is constant number
+	lda #167
+	clc
+	adc yoff
+	 ; end add / sub var with constant
+	
+	clc
+	adc wheelbump
+	 ; end add / sub var with constant
+	
+	sta yl
 	; Assigning single variable : i
 	lda #0
 	sta i
-MainProgram_for9415
-	; Binary clause Simplified: GREATER
+MainProgram_for40605
+	; Binary clause Simplified: EQUALS
 	; ----------
-	; vbmTestPixel x, y
+	; vbmTestPixel2 x, y  - can be used to test for multi-color mode pixels
 	; y is complex
 	; 8 bit binop
 	; Add/sub where right value is constant number
-	lda #184
-	sec
-	sbc i
+	lda #176
+	clc
+	adc i
 	 ; end add / sub var with constant
 	sta vbmY
 	; x is complex
@@ -1323,72 +1534,115 @@ MainProgram_for9415
 	adc #16
 	 ; end add / sub var with constant
 	sta vbmX
-	jsr vbmTestPixel ; returns A = 1 or 0
+	jsr vbmTestPixel2
 	
 	; Compare with pure num / var optimization
 	cmp #$0;keep
-	bcc MainProgram_elsedoneblock89154
-	beq MainProgram_elsedoneblock89154
-MainProgram_ConditionalTrueBlock84140
-	; Assigning single variable : yoff_r
+	bne MainProgram_elsedoneblock91319
+MainProgram_ConditionalTrueBlock89590
+	; Assigning single variable : yoff
 	lda i
-	sta yoff_r
-MainProgram_elseblock35761
-MainProgram_elsedoneblock89154
+	sta yoff
+MainProgram_elseblock9853
+MainProgram_elsedoneblock91319
 	inc i
 	lda #8
 	cmp i ;keep
-	bne MainProgram_for9415
-MainProgram_forLoopDone80146
-	; Assigning single variable : y
+	bne MainProgram_for40605
+MainProgram_forLoopDone83951
+	; Assigning single variable : yr
 	; 8 bit binop
 	; Add/sub where right value is constant number
-	lda #164
-	sec
-	sbc yoff
+	; 8 bit binop
+	; Add/sub where right value is constant number
+	lda #167
+	clc
+	adc yoff
 	 ; end add / sub var with constant
 	
-	sta y
-	; Assigning single variable : x
+	clc
+	adc wheelbump
+	 ; end add / sub var with constant
+	
+	sta yr
+	; Assigning single variable : wheelbump
 	; 8 bit binop
 	; Add/sub where right value is constant number
+	lda wheelbump
+	eor #1
+	 ; end add / sub var with constant
+	
+	sta wheelbump
+	; Binary clause Simplified: NOTEQUALS
+	; 8 bit binop
+	; Add/sub where right value is constant number
+	lda joy1
+	and #1
+	 ; end add / sub var with constant
+	
+	; Compare with pure num / var optimization
+	cmp #$0;keep
+	beq MainProgram_elsedoneblock15099
+MainProgram_ConditionalTrueBlock19594
+	; Assigning single variable : x
+	; Optimizer: a = a +/- b
 	lda x
 	clc
-	adc dir
-	 ; end add / sub var with constant
-	
+	adc #2
 	sta x
-	; Binary clause: EQUALS
-	; Compare with pure num / var optimization
-	cmp #$14;keep
-	; BC done
-	bne MainProgram_tempfail7852
-MainProgram_binaryclausesuccess26639
-	jmp MainProgram_ConditionalTrueBlock56586
-MainProgram_tempfail7852
-	; Binary clause: EQUALS
-	lda x
-	; Compare with pure num / var optimization
-	cmp #$6e;keep
-	; BC done
-	bne MainProgram_elseblock68639
-MainProgram_binaryclausesuccess35579
-MainProgram_ConditionalTrueBlock56586
-	; Assigning single variable : dir
+MainProgram_elseblock67241
+MainProgram_elsedoneblock15099
+	; Binary clause Simplified: NOTEQUALS
 	; 8 bit binop
 	; Add/sub where right value is constant number
-	lda dir
-	eor #252
+	lda joy1
+	and #8
 	 ; end add / sub var with constant
 	
-	sta dir
-MainProgram_elseblock68639
-MainProgram_elsedoneblock49014
+	; Compare with pure num / var optimization
+	cmp #$0;keep
+	beq MainProgram_elsedoneblock14485
+MainProgram_ConditionalTrueBlock11793
+	; Assigning single variable : x
+	; Optimizer: a = a +/- b
+	lda x
+	sec
+	sbc #2
+	sta x
+MainProgram_elseblock97265
+MainProgram_elsedoneblock14485
+	; Binary clause Simplified: LESS
+	lda x
+	; Compare with pure num / var optimization
+	cmp #$14;keep
+	bcs MainProgram_elsedoneblock23291
+MainProgram_ConditionalTrueBlock7675
+	
+; //if(x = oldx) then x:=x-2;
+	; Assigning single variable : x
+	lda #20
+	sta x
+MainProgram_elseblock77903
+MainProgram_elsedoneblock23291
+	; Binary clause Simplified: GREATER
+	lda x
+	; Compare with pure num / var optimization
+	cmp #$78;keep
+	bcc MainProgram_elsedoneblock59838
+	beq MainProgram_elsedoneblock59838
+MainProgram_ConditionalTrueBlock3141
+	; Assigning single variable : x
+	lda #120
+	sta x
+MainProgram_elseblock81642
+MainProgram_elsedoneblock59838
+	
+; //screen_bg_color := BLUE + SCREEN_BG_BLACK;
 	; Assigning single variable : drawTree
 	lda #1
 	sta drawTree+#$0
-MainProgram_elseblock17869
-MainProgram_elsedoneblock69728
+MainProgram_elseblock96328
+MainProgram_elsedoneblock11906
 	; Binary clause Simplified: EQUALS
 	; Load Byte array
 	ldx #$1
@@ -1396,8 +1650,10 @@ MainProgram_elsedoneblock69728
 	
 	; Compare with pure num / var optimization
 	cmp #$0;keep
-	bne MainProgram_elsedoneblock35449
-MainProgram_ConditionalTrueBlock6280
+	bne MainProgram_elsedoneblock10250
+MainProgram_ConditionalTrueBlock59216
+	
+; // Set up next ground tile
 	; Assigning single variable : drawTree
 	lda #1
 	sta drawTree+#$1
@@ -1414,18 +1670,18 @@ MainProgram_ConditionalTrueBlock6280
 	; Compare with pure num / var optimization
 	cmp #$7;keep
 	; BC done
-	bne MainProgram_tempfail22815
-MainProgram_binaryclausesuccess26505
-	jmp MainProgram_ConditionalTrueBlock53575
-MainProgram_tempfail22815
+	bne MainProgram_tempfail63458
+MainProgram_binaryclausesuccess91192
+	jmp MainProgram_ConditionalTrueBlock52632
+MainProgram_tempfail63458
 	; Binary clause: EQUALS
 	lda updowntile
 	; Compare with pure num / var optimization
 	cmp #$0;keep
 	; BC done
-	bne MainProgram_elseblock29044
-MainProgram_binaryclausesuccess70217
-MainProgram_ConditionalTrueBlock53575
+	bne MainProgram_elseblock31877
+MainProgram_binaryclausesuccess42542
+MainProgram_ConditionalTrueBlock52632
 	; Assigning single variable : updowndir
 	; 8 bit binop
 	; Add/sub where right value is constant number
@@ -1434,24 +1690,27 @@ MainProgram_ConditionalTrueBlock53575
 	 ; end add / sub var with constant
 	
 	sta updowndir
-MainProgram_elseblock29044
-MainProgram_elsedoneblock89088
-MainProgram_elseblock33562
-MainProgram_elsedoneblock35449
-	jmp MainProgram_while9055
-MainProgram_elseblock42387
-MainProgram_elsedoneblock55758
+MainProgram_elseblock31877
+MainProgram_elsedoneblock87478
+MainProgram_elseblock67081
+MainProgram_elsedoneblock10250
+	jmp MainProgram_while86748
+MainProgram_elseblock43400
+MainProgram_elsedoneblock96532
 EndSymbol
-EndBlock6600
-	org $3800
+EndBlock4665
+	org $3000
 carSprite
 	incbin "/Users/jartza/src/coldwar///export/sprite_carbody.bin"
-	org $38c0
+	org $30c0
 wheelSprite
 	incbin "/Users/jartza/src/coldwar///export/sprite_wheel.bin"
-	org $3900
+	org $3100
 groundTile
 	incbin "/Users/jartza/src/coldwar///export/sprite_ground.bin"
-	org $3910
+	org $3110
 updownTile
 	incbin "/Users/jartza/src/coldwar///export/sprite_updown.bin"
+	org $3150
+smallFont
+	incbin "/Users/jartza/src/coldwar///export/font4x8.bin"

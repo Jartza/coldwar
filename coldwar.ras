@@ -5,21 +5,24 @@ var
 	@userdata $1000 $1FFF "Bitmap"
 
 	// Export sprites
-	@vbmexport "res/sprites/sprites.flf" "export/sprite_carbody.bin" 0 12 2 1
-	@vbmexport "res/sprites/sprites.flf" "export/sprite_wheel.bin"  80 88 1 1
-	@vbmexport "res/sprites/sprites.flf" "export/sprite_ground.bin" 160 162 1 1
-	@vbmexport "res/sprites/sprites.flf" "export/sprite_updown.bin" 120 128 1 1
+	@vbmexport	"res/sprites/sprites.flf" 	"export/sprite_carbody.bin"		0 	12	2	1
+	@vbmexport	"res/sprites/sprites.flf" 	"export/sprite_wheel.bin"  		80 	88	1	1
+	@vbmexport	"res/sprites/sprites.flf" 	"export/sprite_ground.bin" 		160	162	1	1
+	@vbmexport	"res/sprites/sprites.flf" 	"export/sprite_updown.bin" 		120	128	1	1
+	@export		"res/char/font4x8.flf" 		"export/font4x8.bin" 			0 	64
 
 	// Resource memory
-	const addrCarBody:	address = $3800;
+	const addrCarBody:	address = $3000;
 	const addrWheel:	address = addrCarBody + 192;
 	const addrGround:	address = addrWheel + 64;
 	const addrUpdown:	address = addrGround + 16;
+	const addrFont:		address = addrUpdown + 64;
 
 	carSprite: incbin("export/sprite_carbody.bin", addrCarBody);
 	wheelSprite: incbin("export/sprite_wheel.bin", addrWheel);
 	groundTile: incbin("export/sprite_ground.bin", addrGround);
 	updownTile: incbin("export/sprite_updown.bin", addrUpdown);
+	smallFont: incbin("export/font4x8.bin", addrFont);
 
 	@startblock $2000 "game"
 
@@ -62,8 +65,16 @@ var
 
 	const MULTICOLOR: byte = 8;
 
-	x: byte = 20;
+	scnt: byte = 0;
+	gcnt: byte = 0;
+	mcnt: byte = 0;
+
+	x: byte = 50;
 	y: byte = 156;
+	yr: byte = 160;
+	yl: byte = 160;
+	oldyr: byte = 180;
+	oldyl: byte = 180;
 	oldx: byte = 168;
 	oldy: byte = 156;
 	dir: byte = 2;
@@ -76,16 +87,15 @@ var
 	groundmoved: byte = 0;
 	i: byte = 0;
 	p1: pointer;
-	scroffset: byte = 0;
 	yoff: byte = 0;
 	yoff_r: byte = 0;
 	yoff_l: byte = 0;
+	wheelbump: byte = 0;
+    message: cstring = ("COLD WAR - some buggy game");
 
 procedure drawcar();
 begin
 	StartIRQ(0);  // store the processors registers
-
-	scroffset := scroffset + 1;
 
 	//screen_bg_color := BLACK + SCREEN_BG_BLACK;
 
@@ -96,20 +106,16 @@ begin
 	vbmDrawSpriteSliceE(carbody_M, 0, 8);
 	vbmNextColumn();
 	vbmDrawSpriteSliceE(carbody_R, 0, 8);
-	vbmSetPosition2(oldx, oldy + 10);
+	vbmSetPosition2(oldx, oldyl);
 	vbmDrawSprite8E(wheel_L, wheel_R);
-	vbmSetPosition2(oldx+10, oldy + 10);
+	vbmSetPosition2(oldx+10, oldyr);
 	vbmDrawSprite8E(wheel_L, wheel_R);
 
-	// Scroll the landscape
-	if (scroffset & 1) then
-	begin
-		vbmScreenShiftLeft(176,192);
-		vbmScreenShiftLeft(176,192);
-	end;
+	vbmScreenShiftLeft(176,192);
+	vbmScreenShiftLeft(176,192);
 	
-	// Draw ground
-	if (drawTree[d_grnd] = 1 and scroffset & 7 = 0) then
+	// Draw new ground piece
+	if (drawTree[d_grnd] = 1 and gcnt = 0) then
 	begin
 		vbmSetPosition2(152, 176);
 		p1 := int2ptr(updown_T[updowntile]);
@@ -124,15 +130,22 @@ begin
 	vbmDrawSpriteSliceE(carbody_M, 0, 8);
 	vbmNextColumn();
 	vbmDrawSpriteSliceE(carbody_R, 0, 8);
-	vbmSetPosition2(x, y + 10);
+	vbmSetPosition2(x, yl);
 	vbmDrawSprite8E(wheel_L, wheel_R);
-	vbmSetPosition2(x+10, y + 10);
+	vbmSetPosition2(x+10, yr);
 	vbmDrawSprite8E(wheel_L, wheel_R);
 	drawTree[d_car] := 0;
 	oldx := x;
 	oldy := y;
+	oldyr := yr;
+	oldyl := yl;
 
 	//screen_bg_color := BLUE + SCREEN_BG_BLACK;
+
+	// Increase counters
+	inc(scnt);
+	gcnt := (gcnt + 1) & 3;
+	mcnt := (mcnt + 1) & 1;
 
 	closeIRQ(); // restore the processor registers and complete our interrupt
 end;
@@ -152,26 +165,44 @@ begin
 		grndtile := grndtile xor 1;
 	end;
 
+    // draw text
+    vbmDrawSmallTextE(message, smallFont, 6, 1, 6);
+    
+	fill(screen_col_loc, WHITE, 20);
+
 	DisableVIC20IRQ();
 	
 	// Set up an raster interrupt to call outiside visible screen,
 	// params: IRQ function, raster line, PAL/NTSC (0/1)
-	VIARasterIRQ(drawcar(), 110, 0);
+	VIARasterIRQ(drawcar(), 112, 0);
 
 
 	while(true) offpage do
 	begin
-		if (drawTree[d_car] = 0 and scroffset & 1 = 0) then
+		readjoy1();
+		if (drawTree[d_car] = 0) then
 		begin
+			//screen_bg_color := BLACK + SCREEN_BG_BLACK;
 			// calculate new y offset for buggy and wheels
-			for i := 0 to 8 do if (vbmTestPixel(x+8, 184-i) > 0) then yoff := i;
-			for i := 0 to 8 do if (vbmTestPixel(x, 184-i) > 0) then yoff_l := i;
-			for i := 0 to 8 do if (vbmTestPixel(x+16, 184-i) > 0) then yoff_r := i;
-			y := 164 - yoff;
-			x := x + dir;
-			if (x = 20 or x = 110) then dir:=dir xor 252;
+			for i := 0 to 8 do if (vbmTestPixel2(x+8, 176+i) = 0) then yoff := i;
+			y := 156 + yoff;
+			for i := 0 to 8 do if (vbmTestPixel2(x, 176+i) = 0) then yoff := i;
+			yl := 167 + yoff + wheelbump;
+			for i := 0 to 8 do if (vbmTestPixel2(x+16, 176+i) = 0) then yoff := i;
+			yr := 167 + yoff + wheelbump;
+			wheelbump := wheelbump xor 1;
+			if (joy1 & JOY_RIGHT) then x:=x+2;
+			if (joy1 & JOY_LEFT) then x:=x-2;
+			//if (x = oldx) then x:=x-2;
+			if (x < 20) then x := 20;
+			if (x > 120) then x := 120;
+
+			//screen_bg_color := BLUE + SCREEN_BG_BLACK;
+			
 			drawTree[d_car] := 1;
 		end;
+		
+		// Set up next ground tile
 		if (drawTree[d_grnd] = 0) then
 		begin
 			drawTree[d_grnd] := 1;
