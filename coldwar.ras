@@ -61,10 +61,13 @@ var
 	const d_grnd:	byte = 1;
 
 	// State index
-	const s_move:	byte = 0;
-	const s_jump:	byte = 1;
-	const s_stat:	byte = 2;
+	const s_stat:	byte = 0;
+	const s_move:	byte = 1;
+	const s_jump:	byte = 2;
 
+	const x_none:	byte = 0;
+	const x_left:	byte = 1;
+	const x_right:	byte = 2;
 
 	drawTree: array[] of byte = (
 		0, 0
@@ -99,13 +102,15 @@ var
 	yoff_l: byte = 0;
 	wheelbump: byte = 0;
 	state: byte = 0;
-    message: cstring = ("COLD WAR - some buggy game");
+	xdir: byte = 0;
+	jdir: byte = 0;
+    message: cstring = ("COLD WAR - little buggy game");
 
 procedure drawcar();
 begin
 	StartIRQ(0);  // store the processors registers
 
-	//screen_bg_color := BLACK + SCREEN_BG_BLACK;
+	//screen_bg_color := RED + SCREEN_BG_BLACK;
 
 	// Clear previous car sprite
 	vbmSetPosition2(oldx, oldy);
@@ -114,13 +119,16 @@ begin
 	vbmDrawSpriteSliceE(carbody_M, 0, 8);
 	vbmNextColumn();
 	vbmDrawSpriteSliceE(carbody_R, 0, 8);
-	vbmSetPosition2(oldx, oldyl);
+	vbmSetPosition2(oldx, oldy + oldyl + 6);
 	vbmDrawSprite8E(wheel_L, wheel_R);
-	vbmSetPosition2(oldx+10, oldyr);
+	vbmSetPosition2(oldx+10, oldy + oldyr + 7);
 	vbmDrawSprite8E(wheel_L, wheel_R);
 
-	vbmScreenShiftLeft(176,192);
-	vbmScreenShiftLeft(176,192);
+	if (scnt & 1) then
+	begin
+		vbmScreenShiftLeft(176,192);
+		vbmScreenShiftLeft(176,192);
+	end;
 	
 	// Draw new ground piece
 	if (drawTree[d_grnd] = 1 and gcnt = 0) then
@@ -138,9 +146,9 @@ begin
 	vbmDrawSpriteSliceE(carbody_M, 0, 8);
 	vbmNextColumn();
 	vbmDrawSpriteSliceE(carbody_R, 0, 8);
-	vbmSetPosition2(x, yl);
+	vbmSetPosition2(x, y + yl + 6);
 	vbmDrawSprite8E(wheel_L, wheel_R);
-	vbmSetPosition2(x+10, yr);
+	vbmSetPosition2(x+10, y + yr + 7);
 	vbmDrawSprite8E(wheel_L, wheel_R);
 	drawTree[d_car] := 0;
 	oldx := x;
@@ -152,10 +160,16 @@ begin
 
 	// Increase counters
 	inc(scnt);
-	gcnt := (gcnt + 1) & 3;
+	gcnt := (gcnt + 1) & 7;
 	mcnt := (mcnt + 1) & 1;
 
 	closeIRQ(); // restore the processor registers and complete our interrupt
+end;
+
+procedure limit_x();
+begin
+	if (x < 20) then x := 20;
+	if (x > 120) then x := 120;
 end;
 
 begin
@@ -174,7 +188,7 @@ begin
 	end;
 
     // draw text
-    vbmDrawSmallTextE(message, smallFont, 6, 1, 6);
+    vbmDrawSmallTextE(message, smallFont, 5, 1, 6);
     
 	fill(screen_col_loc, WHITE, 20);
 
@@ -187,29 +201,58 @@ begin
 
 	while(true) offpage do
 	begin
+		// Read joystick
 		readjoy1();
-		if (drawTree[d_car] = 0) then
+		
+		// Basic movement and wheel wobble
+		if ((drawTree[d_car] = 0 and mcnt = 0) and state = s_stat) then
 		begin
-			//screen_bg_color := BLACK + SCREEN_BG_BLACK;
+			//screen_bg_color := GREEN + SCREEN_BG_BLACK;
 			// calculate new y offset for buggy and wheels
 			for i := 0 to 8 do if (vbmTestPixel2(x+8, 176+i) = 0) then yoff := i;
 			y := 156 + yoff;
 			for i := 0 to 8 do if (vbmTestPixel2(x, 176+i) = 0) then yoff := i;
-			yl := 167 + yoff + wheelbump;
+			yl := (yoff >> 1) + wheelbump;
 			for i := 0 to 8 do if (vbmTestPixel2(x+16, 176+i) = 0) then yoff := i;
-			yr := 167 + yoff + wheelbump;
+			yr := (yoff >> 1) + wheelbump;
 			wheelbump := wheelbump xor 1;
-			if (joy1 & JOY_RIGHT) then x:=x+2;
-			if (joy1 & JOY_LEFT) then x:=x-2;
+			xdir := x_none;
+			if (joy1 & JOY_RIGHT) then
+			begin
+				x := x + 2;
+				xdir := x_right;
+			end;
+			if (joy1 & JOY_LEFT) then
+			begin
+				x := x - 2;
+				xdir := x_left;
+			end;
+			if (joy1 & JOY_DOWN) then
+			begin
+				state := s_jump;
+			end;
 			//if (x = oldx) then x:=x-2;
-			if (x < 20) then x := 20;
-			if (x > 120) then x := 120;
-
+			limit_x();
 			//screen_bg_color := BLUE + SCREEN_BG_BLACK;
-			
 			drawTree[d_car] := 1;
 		end;
 		
+		// Jump
+		if ((drawTree[d_car] = 0 and mcnt = 0) and state = s_jump) then
+		begin
+			if (xdir = x_right) then x:=x + 2;
+			if (xdir = x_left) then x:=x - 2;
+			limit_x();
+			if (jdir = 0) then y:=y-2 else y:=y+2;
+			if (y < 140) then jdir := 1;
+			if (y > 164) then
+			begin
+				jdir := 0;
+				state := s_stat;
+			end;
+			drawTree[d_car] := 1;
+		end;
+
 		// Set up next ground tile
 		if (drawTree[d_grnd] = 0) then
 		begin
