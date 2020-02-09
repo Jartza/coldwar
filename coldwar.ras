@@ -5,7 +5,7 @@ var
 	@userdata $1000 $1FFF "Bitmap"
 
 	// Export sprites, tiles and font from FLUFF files
-	@vbmexport	"res/sprites/sprites.flf" 	"export/sprite_carbody.bin"		0 	12	2	1
+	@vbmexport	"res/sprites/sprites.flf" 	"export/sprite_carbody.bin"		0 	12	1	1
 	@vbmexport	"res/sprites/sprites.flf" 	"export/sprite_wheel.bin"  		80 	88	1	1
 	@vbmexport	"res/sprites/sprites.flf" 	"export/sprite_ground.bin" 		160	162	1	1
 	@vbmexport	"res/sprites/sprites.flf" 	"export/sprite_updown.bin" 		120	128	1	1
@@ -13,7 +13,7 @@ var
 
 	// Memory addresses for sprites & tiles
 	const addrCarBody:	address = $3400;
-	const addrWheel:	address = addrCarBody + 192;
+	const addrWheel:	address = addrCarBody + 96;
 	const addrGround:	address = addrWheel + 64;
 	const addrUpdown:	address = addrGround + 16;
 	const addrFont:		address = addrUpdown + 64;
@@ -29,13 +29,13 @@ var
 
 	// Pre-shifted address-table for car body sprite
 	carbody_L: array[] of integer = (
-		addrCarBody, addrCarBody+48, addrCarBody+96, addrCarBody+144
+		addrCarBody, addrCarBody+24, addrCarBody+48, addrCarBody+72
 	);
 	carbody_M: array[] of integer = (
-		addrCarBody+16, addrCarBody+64, addrCarBody+112, addrCarBody+160
+		addrCarBody+8, addrCarBody+32, addrCarBody+56, addrCarBody+80
 	);
 	carbody_R: array[] of integer = (
-		addrCarBody+32, addrCarBody+80, addrCarBody+128, addrCarBody+176
+		addrCarBody+16, addrCarBody+40, addrCarBody+64, addrCarBody+88
 	);
 	
 	// Address-table for ground tiles
@@ -79,6 +79,10 @@ var
 	drawTree: array[] of byte = (
 		0, 0
 	);
+	
+	stars: array[] of byte = (
+		0, 0, 0, 0, 0, 0
+	);
 
 	// Global variables for all the game logic
 	scnt: byte = 0;
@@ -101,7 +105,7 @@ var
 	updowndir: byte = 1;
 	groundpos: byte = 0;
 	groundmoved: byte = 0;
-	i: byte = 0;
+	i,t: byte = 0;
 	p1: pointer;
 	yoff: byte = 0;
 	yoff_r: byte = 0;
@@ -141,11 +145,12 @@ begin
 	// Stars
 	if (bcnt = 0) then
 	begin
-		vbmScreenShiftLeft(40,41);
-		vbmScreenShiftLeft(60,61);
-		vbmScreenShiftLeft(70,71);
-		vbmScreenShiftLeft(80,81);
-		vbmScreenShiftLeft(100,101);
+		fori t := 0 to 5 do
+		begin
+			vbmDrawDotE(stars[t], 40 + (t * 10));
+			decRange(stars[t], 0, 160);
+			vbmDrawDotE(stars[t], 40 + (t * 10));
+		end;
 	end;
 	
 	// Draw new ground piece
@@ -176,7 +181,7 @@ begin
 	inc(scnt);
 	incrange(gcnt, 0, 8);
 	incrange(mcnt, 0, 2);
-	incrange(bcnt, 0, 2);
+	incrange(bcnt, 0, 3);
 
 //				screen_bg_color := BLUE + SCREEN_BG_BLACK;
 
@@ -237,11 +242,11 @@ begin
 	end;
 	
 	// Draw "stars"
-	vbmDrawDot(30,40);
-	vbmDrawDot(151,60);
-	vbmDrawDot(120,70);
-	vbmDrawDot(71,80);
-	vbmDrawDot(50,100);
+	fori i := 0 to 5 do
+	begin
+		stars[i] := (random() >> 1) + (random() >>3);
+		vbmDrawDot(stars[i], 40 + (i * 10));
+	end;
 
     // Draw "title" text
     vbmDrawSmallTextE(message, smallFont, 5, 1, 6);
