@@ -11,14 +11,14 @@ var
 	@vbmexport	"res/sprites/sprites.flf" 	"export/sprite_updown.bin" 		120	128	1	1
 	@export		"res/char/font4x8.flf" 		"export/font4x8.bin" 			0 	64
 
-	// Memory addresses fpr resources
-	const addrCarBody:	address = $3000;
+	// Memory addresses for sprites & tiles
+	const addrCarBody:	address = $3400;
 	const addrWheel:	address = addrCarBody + 192;
 	const addrGround:	address = addrWheel + 64;
 	const addrUpdown:	address = addrGround + 16;
 	const addrFont:		address = addrUpdown + 64;
 
-	// Include exported resources
+	// Include exported resources into binary
 	carSprite: incbin("export/sprite_carbody.bin", addrCarBody);
 	wheelSprite: incbin("export/sprite_wheel.bin", addrWheel);
 	groundTile: incbin("export/sprite_ground.bin", addrGround);
@@ -84,6 +84,7 @@ var
 	scnt: byte = 0;
 	gcnt: byte = 0;
 	mcnt: byte = 0;
+	bcnt: byte = 0;
 	x: byte = 50;
 	y: byte = 156;
 	yr: byte = 160;
@@ -119,15 +120,13 @@ begin
 	// Store the processors registers
 	StartIRQ(0);
 
-	//screen_bg_color := RED + SCREEN_BG_BLACK;
+//				screen_bg_color := RED + SCREEN_BG_BLACK;
 
 	// Clear previous car sprite
 	vbmSetPosition2(oldx, oldy);
-	vbmDrawSpriteSliceE(carbody_L, 0, 8);
-	vbmNextColumn();
-	vbmDrawSpriteSliceE(carbody_M, 0, 8);
-	vbmNextColumn();
-	vbmDrawSpriteSliceE(carbody_R, 0, 8);
+	vbmDrawSprite2E(carbody_L, carbody_M, carbody_R);
+	
+	// Clear old wheels
 	vbmSetPosition2(oldx, oldy + oldyl + 6);
 	vbmDrawSprite8E(wheel_L, wheel_R);
 	vbmSetPosition2(oldx+10, oldy + oldyr + 7);
@@ -137,6 +136,16 @@ begin
 	begin
 		vbmScreenShiftLeft(176,192);
 		vbmScreenShiftLeft(176,192);
+	end;
+
+	// Stars
+	if (bcnt = 0) then
+	begin
+		vbmScreenShiftLeft(40,41);
+		vbmScreenShiftLeft(60,61);
+		vbmScreenShiftLeft(70,71);
+		vbmScreenShiftLeft(80,81);
+		vbmScreenShiftLeft(100,101);
 	end;
 	
 	// Draw new ground piece
@@ -150,11 +159,9 @@ begin
 
 	// Draw new car sprite
 	vbmSetPosition2(x, y);
-	vbmDrawSpriteSliceE(carbody_L, 0, 8);
-	vbmNextColumn();
-	vbmDrawSpriteSliceE(carbody_M, 0, 8);
-	vbmNextColumn();
-	vbmDrawSpriteSliceE(carbody_R, 0, 8);
+	vbmDrawSprite2E(carbody_L, carbody_M, carbody_R);
+	
+	// Draw wheels
 	vbmSetPosition2(x, y + yl + 6);
 	vbmDrawSprite8E(wheel_L, wheel_R);
 	vbmSetPosition2(x+10, y + yr + 7);
@@ -165,28 +172,47 @@ begin
 	oldyr := yr;
 	oldyl := yl;
 
-	//screen_bg_color := BLUE + SCREEN_BG_BLACK;
-
 	// Increase counters
 	inc(scnt);
-	gcnt := (gcnt + 1) & 7;
-	mcnt := (mcnt + 1) & 1;
+	incrange(gcnt, 0, 8);
+	incrange(mcnt, 0, 2);
+	incrange(bcnt, 0, 2);
+
+//				screen_bg_color := BLUE + SCREEN_BG_BLACK;
 
 	// Restore the processor registers and complete our interrupt
 	closeIRQ();
 end;
 
 // Limit buggy x movement
-//
 procedure limit_x();
 begin
-	if (x < 20) then x := 20;
+	if (x < 8) then x := 8;
 	if (x > 120) then x := 120;
+end;
+
+// Move buggy right
+procedure buggy_right();
+begin
+	x := x + 2;
+	xdir := x_right;
+end;
+
+// Move buggy left
+procedure buggy_left();
+begin
+	x := x - 2;
+	xdir := x_left;
+end;
+
+// Find ground offset at x+offset
+procedure find_ground(xoffset:byte);
+begin
+	for i := 0 to 8 do if (vbmTestPixel2(x+xoffset, 176+i) = 0) then yoff := i;
 end;
 
 // Main body, handle all initialization and
 // game logic and joystick controls.
-//
 begin
 	// Initialize display mode to 19 column
 	vbmSetDisplayMode(1);
@@ -197,6 +223,7 @@ begin
 	// Clear color memory with WHITE and set MULTICOLOR flag
 	vbmClearColor(WHITE + MULTICOLOR);
 	
+
 	// Set other colors, plus audio volume
 	AUX_COLOR_AND_VOLUME := RED * 15 + 15;
 	screen_bg_color := BLUE + SCREEN_BG_BLACK;
@@ -208,6 +235,13 @@ begin
 		vbmDrawTile(p1);
 		grndtile := grndtile xor 1;
 	end;
+	
+	// Draw "stars"
+	vbmDrawDot(30,40);
+	vbmDrawDot(151,60);
+	vbmDrawDot(120,70);
+	vbmDrawDot(71,80);
+	vbmDrawDot(50,100);
 
     // Draw "title" text
     vbmDrawSmallTextE(message, smallFont, 5, 1, 6);
@@ -215,7 +249,6 @@ begin
 	// Set upper two rows to hires single color
 	fill(screen_col_loc, WHITE, 20);
 
-	
 	// Set up an raster interrupt to call outside visible screen,
 	// params: IRQ function, raster line, PAL/NTSC (0/1)
 	DisableVIC20IRQ();
@@ -232,28 +265,19 @@ begin
 		begin
 			//screen_bg_color := GREEN + SCREEN_BG_BLACK;
 			// calculate new y offset for buggy and wheels
-			for i := 0 to 8 do if (vbmTestPixel2(x+8, 176+i) = 0) then yoff := i;
+			find_ground(8);
 			y := 156 + yoff;
-			for i := 0 to 8 do if (vbmTestPixel2(x, 176+i) = 0) then yoff := i;
+			find_ground(0);
 			yl := (yoff >> 1) + wheelbump;
-			for i := 0 to 8 do if (vbmTestPixel2(x+16, 176+i) = 0) then yoff := i;
+			find_ground(16);
 			yr := (yoff >> 1) + wheelbump;
 			wheelbump := wheelbump xor 1;
+
+			// Joystick handling
 			xdir := x_none;
-			if (joy1 & JOY_RIGHT) then
-			begin
-				x := x + 2;
-				xdir := x_right;
-			end;
-			if (joy1 & JOY_LEFT) then
-			begin
-				x := x - 2;
-				xdir := x_left;
-			end;
-			if (joy1 & JOY_DOWN) then
-			begin
-				state := s_jump;
-			end;
+			if (joy1 & JOY_RIGHT) then buggy_right();
+			if (joy1 & JOY_LEFT) then buggy_left();
+			if (joy1 & JOY_DOWN) then state := s_jump;
 			//if (x = oldx) then x:=x-2;
 			limit_x();
 			//screen_bg_color := BLUE + SCREEN_BG_BLACK;
@@ -263,8 +287,8 @@ begin
 		// Jump
 		if ((drawTree[d_car] = 0 and mcnt = 0) and state = s_jump) then
 		begin
-			if (xdir = x_right) then x:=x + 2;
-			if (xdir = x_left) then x:=x - 2;
+			if (xdir = x_right) then buggy_right();
+			if (xdir = x_left) then buggy_left();
 			limit_x();
 			if (jdir = 0) then y:=y-2 else y:=y+2;
 			if (y < 140) then jdir := 1;
