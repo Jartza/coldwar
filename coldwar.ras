@@ -12,7 +12,7 @@ var
 	@export		"res/char/font4x8.flf" 		"export/font4x8.bin" 			0 	64
 
 	// Memory addresses for sprites & tiles
-	const addrCarBody:	address = $3400;
+	const addrCarBody:	address = $2d00;
 	const addrWheel:	address = addrCarBody + 96;
 	const addrGround:	address = addrWheel + 64;
 	const addrUpdown:	address = addrGround + 16;
@@ -80,40 +80,71 @@ var
 		0, 0
 	);
 	
-	stars: array[] of byte = (
-		0, 0, 0, 0, 0, 0
+	// Suspension "ring buffer"
+	suspension: array[] of byte = (
+		0, 0, 0, 156
 	);
+
+	// Suspension buffer vars
+	sus_y: byte = 0;
+	sus_wy: byte = 3;
+
 
 	// Global variables for all the game logic
 	scnt: byte = 0;
 	gcnt: byte = 0;
 	mcnt: byte = 0;
 	bcnt: byte = 0;
+	
+	// Buggy body coordinates, pretty
+	// straightforward x and y and y offset
 	x: byte = 50;
 	y: byte = 156;
-	yr: byte = 160;
-	yl: byte = 160;
-	oldyr: byte = 180;
-	oldyl: byte = 180;
-	oldx: byte = 168;
-	oldy: byte = 156;
+	y_off: byte = 0;
+	
+	// Buggy wheels coordinates,
+	// y coordinate and offset for each wheel.
+	// x is calculated from body
+	wh_y: byte = 156;			// generic wheel y coordinate
+	wr_y_off: byte = 0;			// right wheel y offset
+	wl_y_off: byte = 0;			// left wheel y offset
+
+	// Storage space for old coordinates,
+	// which are used to clear old graphics before
+	// drawing new one
+	old_x: byte = 168;
+	old_y: byte = 156;
+	old_y_off: byte = 0;
+	old_wh_y: byte = 180;
+	old_wr_y_off: byte = 0;		// old right wheel y offset
+	old_wl_y_off: byte = 0;		// old left wheel y offset
+
+	// Loop and temp variables, 
+	// t used inside IRQ, i used outside IRQ
+	i,t: byte = 0;
+
+	// x direction during jump
+	xdir: byte = 0;
+
+	// Game main loop state-machine state
+	state: byte = 0;
+
+	// Generic pointer, used for tile drawing
+	p1: pointer;
+
+	// Used for y offset calculations
+	yoff: byte = 0;
+
+	// Jump direction
+	jdir: byte = 0;
+
+	lag: byte = 0;
 	dir: byte = 2;
-	delay: byte;
 	clr: byte = 0;
 	grndtile: byte = 0;
 	updowntile: byte = 0;
 	updowndir: byte = 1;
-	groundpos: byte = 0;
-	groundmoved: byte = 0;
-	i,t: byte = 0;
-	p1: pointer;
-	yoff: byte = 0;
-	yoff_r: byte = 0;
-	yoff_l: byte = 0;
 	wheelbump: byte = 0;
-	state: byte = 0;
-	xdir: byte = 0;
-	jdir: byte = 0;
     message: cstring = ("COLD WAR - little buggy game");
 
 // Interrupt function that handles all the screen drawing
@@ -127,13 +158,13 @@ begin
 //				screen_bg_color := RED + SCREEN_BG_BLACK;
 
 	// Clear previous car sprite
-	vbmSetPosition2(oldx, oldy);
+	vbmSetPosition2(old_x, old_y + old_y_off);
 	vbmDrawSprite2E(carbody_L, carbody_M, carbody_R);
 	
 	// Clear old wheels
-	vbmSetPosition2(oldx, oldy + oldyl + 6);
+	vbmSetPosition2(old_x, old_wh_y + old_wl_y_off + 10);
 	vbmDrawSprite8E(wheel_L, wheel_R);
-	vbmSetPosition2(oldx+10, oldy + oldyr + 7);
+	vbmSetPosition2(old_x+10, old_wh_y + old_wr_y_off + 10);
 	vbmDrawSprite8E(wheel_L, wheel_R);
 
 	if (scnt & 1) then
@@ -145,12 +176,15 @@ begin
 	// Stars
 	if (bcnt = 0) then
 	begin
-		fori t := 0 to 5 do
-		begin
-			vbmDrawDotE(stars[t], 40 + (t * 10));
-			decRange(stars[t], 0, 160);
-			vbmDrawDotE(stars[t], 40 + (t * 10));
-		end;
+		vbmScreenShiftLeft(50, 51);
+		vbmScreenShiftLeft(70, 71);
+		vbmScreenShiftLeft(90, 91);
+	end;
+	if (mcnt = 0) then
+	begin
+		vbmScreenShiftLeft(40, 41);
+		vbmScreenShiftLeft(60, 61);
+		vbmScreenShiftLeft(80, 81);
 	end;
 	
 	// Draw new ground piece
@@ -163,23 +197,25 @@ begin
 	end;
 
 	// Draw new car sprite
-	vbmSetPosition2(x, y);
-	vbmDrawSprite2E(carbody_L, carbody_M, carbody_R);
+	vbmSetPosition2(x, y + y_off);
+	vbmDrawSprite2(carbody_L, carbody_M, carbody_R);
 	
 	// Draw wheels
-	vbmSetPosition2(x, y + yl + 6);
+	vbmSetPosition2(x, wh_y + wl_y_off + 10);
 	vbmDrawSprite8E(wheel_L, wheel_R);
-	vbmSetPosition2(x+10, y + yr + 7);
+	vbmSetPosition2(x+10, wh_y + wr_y_off + 10);
 	vbmDrawSprite8E(wheel_L, wheel_R);
 	drawTree[d_car] := 0;
-	oldx := x;
-	oldy := y;
-	oldyr := yr;
-	oldyl := yl;
+	old_x := x;
+	old_y := y;
+	old_y_off := y_off;
+	old_wh_y := wh_y;
+	old_wl_y_off := wl_y_off;
+	old_wr_y_off := wr_y_off;
 
 	// Increase counters
 	inc(scnt);
-	incrange(gcnt, 0, 8);
+	incrange(gcnt, 0, 4);
 	incrange(mcnt, 0, 2);
 	incrange(bcnt, 0, 3);
 
@@ -197,23 +233,36 @@ begin
 end;
 
 // Move buggy right
-procedure buggy_right();
+procedure buggy_right(incamount:byte);
 begin
-	x := x + 2;
+	x := x + incamount;
 	xdir := x_right;
 end;
 
 // Move buggy left
-procedure buggy_left();
+procedure buggy_left(decamount:byte);
 begin
-	x := x - 2;
+	x := x - decamount;
 	xdir := x_left;
+end;
+
+// Calculate wheel offset difference to car body
+procedure wheeldiff();
+begin
+	if (wh_y > y) then
+		begin
+			if (wh_y - y > 3) then wh_y := y + 3;
+		end
+	else
+		begin
+			if (y - wh_y > 3) then wh_y := y + 3;
+		end;
 end;
 
 // Find ground offset at x+offset
 procedure find_ground(xoffset:byte);
 begin
-	for i := 0 to 8 do if (vbmTestPixel2(x+xoffset, 176+i) = 0) then yoff := i;
+	for i := 0 to 8 do if (vbmTestPixel2(x+xoffset, 175+i) = 0) then yoff := i;
 end;
 
 // Main body, handle all initialization and
@@ -240,13 +289,22 @@ begin
 		vbmDrawTile(p1);
 		grndtile := grndtile xor 1;
 	end;
-	
+
 	// Draw "stars"
 	fori i := 0 to 5 do
 	begin
-		stars[i] := (random() >> 1) + (random() >>3);
-		vbmDrawDot(stars[i], 40 + (i * 10));
+		vbmDrawDot((random() >> 2) + 8, 40 + (i * 10));
+		vbmDrawDot((random() >> 2) + 88 , 40 + (i * 10));
 	end;
+
+	// Test
+	t := 100;
+	for i:=0 to 255 do
+	begin
+		vbmDrawDot(t, 12);
+		decrange(t, 255, 159);
+	end;
+
 
     // Draw "title" text
     vbmDrawSmallTextE(message, smallFont, 5, 1, 6);
@@ -264,48 +322,62 @@ begin
 	begin
 		// Read joystick
 		readjoy1();
-		
-		// Basic movement and wheel wobble
-		if ((drawTree[d_car] = 0 and mcnt = 0) and state = s_stat) then
+
+		// Handle buggy drawing and moving when IRQ says the car has
+		// been redrawn
+		if (drawTree[d_car] = 0 and mcnt = 0) then
 		begin
-			//screen_bg_color := GREEN + SCREEN_BG_BLACK;
+			case state of
+				// Stationery
+				s_stat:
+					begin
+						xdir := x_none;
+						if (joy1 & JOY_RIGHT) then buggy_right(2);
+						if (joy1 & JOY_LEFT) then buggy_left(2);
+						if (joy1 & JOY_DOWN) then state := s_jump;
+						wheelbump := wheelbump xor 1;
+						drawTree[d_car] := 1;
+					end;
+				// In jump
+				s_jump:
+					begin
+						if (xdir = x_right) then buggy_right(1);
+						if (xdir = x_left) then buggy_left(1);
+						if (jdir = 0) then y:=y-2 else y:=y+2;
+						if (y < 120) then jdir := 1;
+						if (y = 156) then
+						begin
+							jdir := 0;
+							state := s_stat;
+						end;
+	
+						wheeldiff();
+
+						drawTree[d_car] := 1;
+					end;
+			end;
+
+			// make buggy stay inside limits			
+			limit_x();
+
 			// calculate new y offset for buggy and wheels
 			find_ground(8);
-			y := 156 + yoff;
+			y_off := yoff;
 			find_ground(0);
-			yl := (yoff >> 1) + wheelbump;
-			find_ground(16);
-			yr := (yoff >> 1) + wheelbump;
-			wheelbump := wheelbump xor 1;
+			wl_y_off := yoff + wheelbump;
+			find_ground(18);
+			wr_y_off := yoff + wheelbump;
+			
+			// Suspension
+			suspension[sus_y] := y;
+			wh_y := suspension[sus_wy];
+			incrange(sus_y, 0, 4);
+			incrange(sus_wy, 0, 4);
 
-			// Joystick handling
-			xdir := x_none;
-			if (joy1 & JOY_RIGHT) then buggy_right();
-			if (joy1 & JOY_LEFT) then buggy_left();
-			if (joy1 & JOY_DOWN) then state := s_jump;
-			//if (x = oldx) then x:=x-2;
-			limit_x();
-			//screen_bg_color := BLUE + SCREEN_BG_BLACK;
-			drawTree[d_car] := 1;
-		end;
-		
-		// Jump
-		if ((drawTree[d_car] = 0 and mcnt = 0) and state = s_jump) then
-		begin
-			if (xdir = x_right) then buggy_right();
-			if (xdir = x_left) then buggy_left();
-			limit_x();
-			if (jdir = 0) then y:=y-2 else y:=y+2;
-			if (y < 140) then jdir := 1;
-			if (y > 164) then
-			begin
-				jdir := 0;
-				state := s_stat;
-			end;
-			drawTree[d_car] := 1;
 		end;
 
-		// Set up next ground tile
+		// Set up next ground tile when IRQ says ground needs new
+		// tile
 		if (drawTree[d_grnd] = 0) then
 		begin
 			drawTree[d_grnd] := 1;
