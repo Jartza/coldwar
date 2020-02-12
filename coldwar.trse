@@ -1,4 +1,4 @@
-project_path = /Users/jartza/src/coldwar/
+project_path = C:/Source/coldwar/
 zeropages = ,$64, $66, $68, $6A, $6C, $6E, $70, $72, $74, $76, $78, $7A
 temp_zeropages = ,$88, $8A, $8C, $8E
 zeropage_screenmemory = $fe
@@ -29,7 +29,7 @@ override_target_settings_ignore_sys = 0
 override_target_settings_ignore_prg = 0
 output_debug_symbols = 1
 open_files = ,coldwar.asm, res/char/font4x8.flf, coldwar.ras, res/sprites/sprites.flf, sprites.flf
-current_file = res/char/font4x8.flf
+current_file = res/sprites/sprites.flf
 data_header_sprites.flf = 0
 data_header_res/sprites/sprites.flf = 0
 global_defines = ,

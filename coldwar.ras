@@ -157,13 +157,13 @@ begin
 //				screen_bg_color := RED + SCREEN_BG_BLACK;
 
 	// Clear previous car sprite
-	vbmSetPosition2(old_x, old_y + old_y_off);
+	vbmSetPosition2(old_x, old_y + old_y_off+2);
 	vbmDrawSprite2E(carbody_L, carbody_M, carbody_R);
 	
 	// Clear old wheels
 	vbmSetPosition2(old_x, old_wh_y + old_wl_y_off + 10);
 	vbmDrawSprite8E(wheel_L, wheel_R);
-	vbmSetPosition2(old_x+10, old_wh_y + old_wr_y_off + 10);
+	vbmSetPosition2(old_x+8, old_wh_y + old_wr_y_off + 10);
 	vbmDrawSprite8E(wheel_L, wheel_R);
 
 	if (scnt & 1) then
@@ -196,13 +196,13 @@ begin
 	end;
 
 	// Draw new car sprite
-	vbmSetPosition2(x, y + y_off);
+	vbmSetPosition2(x, y + y_off+2);
 	vbmDrawSprite2(carbody_L, carbody_M, carbody_R);
 	
 	// Draw wheels
 	vbmSetPosition2(x, wh_y + wl_y_off + 10);
 	vbmDrawSprite8E(wheel_L, wheel_R);
-	vbmSetPosition2(x+10, wh_y + wr_y_off + 10);
+	vbmSetPosition2(x+8, wh_y + wr_y_off + 10);
 	vbmDrawSprite8E(wheel_L, wheel_R);
 	drawTree[d_car] := 0;
 	old_x := x;
@@ -214,7 +214,7 @@ begin
 
 	// Increase counters
 	inc(scnt);
-	incrange(gcnt, 0, 4);
+	incrange(gcnt, 0, 8);
 	incrange(mcnt, 0, 2);
 	incrange(bcnt, 0, 3);
 
