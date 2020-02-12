@@ -4,7 +4,7 @@ var
 	// Address of bitmap (screen and characters)
 	@userdata $1000 $1FFF "Bitmap"
 
-	// Export sprites, tiles and font from FLUFF files
+	// Export sprites, tiles and font from FLUFF files (creates .bin files)
 	@vbmexport	"res/sprites/sprites.flf" 	"export/sprite_carbody.bin"		0 	12	1	1
 	@vbmexport	"res/sprites/sprites.flf" 	"export/sprite_wheel.bin"  		80 	88	1	1
 	@vbmexport	"res/sprites/sprites.flf" 	"export/sprite_ground.bin" 		160	162	1	1
@@ -12,13 +12,13 @@ var
 	@export		"res/char/font4x8.flf" 		"export/font4x8.bin" 			0 	64
 
 	// Memory addresses for sprites & tiles
-	const addrCarBody:	address = $2d00;
+	const addrCarBody:	address = $3800;
 	const addrWheel:	address = addrCarBody + 96;
 	const addrGround:	address = addrWheel + 64;
 	const addrUpdown:	address = addrGround + 16;
 	const addrFont:		address = addrUpdown + 64;
 
-	// Include exported resources into binary
+	// Include exported resources into binary at specified address
 	carSprite: incbin("export/sprite_carbody.bin", addrCarBody);
 	wheelSprite: incbin("export/sprite_wheel.bin", addrWheel);
 	groundTile: incbin("export/sprite_ground.bin", addrGround);
@@ -82,12 +82,12 @@ var
 	
 	// Suspension "ring buffer"
 	suspension: array[] of byte = (
-		0, 0, 0, 156
+		0, 0, 156
 	);
 
 	// Suspension buffer vars
 	sus_y: byte = 0;
-	sus_wy: byte = 3;
+	sus_wy: byte = 2;
 
 
 	// Global variables for all the game logic
@@ -144,7 +144,6 @@ var
 	grndtile: byte = 0;
 	updowntile: byte = 0;
 	updowndir: byte = 1;
-	wheelbump: byte = 0;
     message: cstring = ("COLD WAR - little buggy game");
 
 // Interrupt function that handles all the screen drawing
@@ -335,7 +334,6 @@ begin
 						if (joy1 & JOY_RIGHT) then buggy_right(2);
 						if (joy1 & JOY_LEFT) then buggy_left(2);
 						if (joy1 & JOY_DOWN) then state := s_jump;
-						wheelbump := wheelbump xor 1;
 						drawTree[d_car] := 1;
 					end;
 				// In jump
@@ -363,16 +361,16 @@ begin
 			// calculate new y offset for buggy and wheels
 			find_ground(8);
 			y_off := yoff;
-			find_ground(0);
-			wl_y_off := yoff + wheelbump;
-			find_ground(18);
-			wr_y_off := yoff + wheelbump;
-			
+			find_ground(2);
+			wl_y_off := yoff;
+			find_ground(12);
+			wr_y_off := yoff;			
+
 			// Suspension
 			suspension[sus_y] := y;
 			wh_y := suspension[sus_wy];
-			incrange(sus_y, 0, 4);
-			incrange(sus_wy, 0, 4);
+			incrange(sus_y, 0, 3);
+			incrange(sus_wy, 0, 3);
 
 		end;
 
