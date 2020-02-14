@@ -9,6 +9,7 @@ var
 	@vbmexport	"res/sprites/sprites.flf" 	"export/sprite_wheel.bin"  		80 	88	1	1
 	@vbmexport	"res/sprites/sprites.flf" 	"export/sprite_ground.bin" 		160	162	1	1
 	@vbmexport	"res/sprites/sprites.flf" 	"export/sprite_updown.bin" 		120	128	1	1
+	@vbmexport	"res/sprites/sprites.flf" 	"export/sprite_upperlevel.bin" 	360	368	1	1
 	@export		"res/char/font4x8.flf" 		"export/font4x8.bin" 			0 	64
 
 	// Memory addresses for sprites & tiles
@@ -17,6 +18,7 @@ var
 	const addrGround:	address = addrWheel + 64;
 	const addrUpdown:	address = addrGround + 16;
 	const addrFont:		address = addrUpdown + 64;
+	const addrUpper:	address = addrFont + 512;
 
 	// Include exported resources into binary at specified address
 	carSprite: incbin("export/sprite_carbody.bin", addrCarBody);
@@ -24,6 +26,7 @@ var
 	groundTile: incbin("export/sprite_ground.bin", addrGround);
 	updownTile: incbin("export/sprite_updown.bin", addrUpdown);
 	smallFont: incbin("export/font4x8.bin", addrFont);
+	upperLevel: incbin("export/sprite_upperlevel.bin", addrUpper);
 
 	@startblock $2000 "game"
 
@@ -49,6 +52,13 @@ var
 		addrUpDown+32, addrUpDown+40, addrUpDown+48, addrUpDown+56
 	);
 
+	// Address-table for upper level tiles
+	upper_T: array[] of integer = (
+		addrUpper, addrUpper+8, addrUpper+16, addrUpper+24,
+		addrUpper+32, addrUpper+40, addrUpper+48, addrUpper+56
+	);
+
+
 	// Pre-shifter address-table for single wheel sprite
 	wheel_L: array[] of integer = (
 		addrWheel, addrWheel+16, addrWheel+32, addrWheel+48
@@ -64,6 +74,7 @@ var
 	// Draw tree index
 	const d_car: 	byte = 0;
 	const d_grnd:	byte = 1;
+	const d_upper:	byte = 2;
 
 	// State index
 	const s_stat:	byte = 0;
@@ -77,7 +88,7 @@ var
 
 	// Drawtree array which handles what to redraw
 	drawTree: array[] of byte = (
-		0, 0
+		0, 0, 0
 	);
 	
 	// Suspension "ring buffer"
@@ -95,6 +106,8 @@ var
 	gcnt: byte = 0;
 	mcnt: byte = 0;
 	bcnt: byte = 0;
+	ucnt: byte = 0;
+	uscnt: byte = 0;
 	
 	// Buggy body coordinates, pretty
 	// straightforward x and y and y offset
@@ -138,12 +151,12 @@ var
 	// Jump direction
 	jdir: byte = 0;
 
-	lag: byte = 0;
-	dir: byte = 2;
-	clr: byte = 0;
+	// Some misc stuff, probably to be removed later
 	grndtile: byte = 0;
 	updowntile: byte = 0;
 	updowndir: byte = 1;
+	uppertile: byte = 0;
+	upperdir: byte = 1;
     message: cstring = ("COLD WAR - little buggy game");
 
 // Interrupt function that handles all the screen drawing
@@ -154,7 +167,7 @@ begin
 	// Store the processors registers
 	StartIRQ(0);
 
-//				screen_bg_color := RED + SCREEN_BG_BLACK;
+//				screen_bg_color := BLACK + SCREEN_BG_BLACK;
 
 	// Clear previous car sprite
 	vbmSetPosition2(old_x, old_y + old_y_off+2);
@@ -170,6 +183,12 @@ begin
 	begin
 		vbmScreenShiftLeft(176,192);
 		vbmScreenShiftLeft(176,192);
+	end;
+
+	if (uscnt = 0) then
+	begin
+		vbmScreenShiftLeft(118,126);
+		vbmScreenShiftLeft(118,126);
 	end;
 
 	// Stars
@@ -195,6 +214,16 @@ begin
 		drawTree[d_grnd] := 0;
 	end;
 
+	// Draw new upper level piece
+	if (drawTree[d_upper] = 1 and ucnt = 0) then
+	begin
+		vbmSetPosition2(152, 118);
+		p1 := int2ptr(upper_T[uppertile]);
+		vbmDrawTile(p1);
+		drawTree[d_upper] := 0;
+	end;
+
+
 	// Draw new car sprite
 	vbmSetPosition2(x, y + y_off+2);
 	vbmDrawSprite2(carbody_L, carbody_M, carbody_R);
@@ -217,6 +246,8 @@ begin
 	incrange(gcnt, 0, 8);
 	incrange(mcnt, 0, 2);
 	incrange(bcnt, 0, 3);
+	incrange(ucnt, 0, 16);
+	incrange(uscnt, 0, 4);
 
 //				screen_bg_color := BLUE + SCREEN_BG_BLACK;
 
@@ -245,17 +276,14 @@ begin
 	xdir := x_left;
 end;
 
-// Calculate wheel offset difference to car body
-procedure wheeldiff();
+// Jump suspension
+procedure jumpsuspend();
 begin
-	if (wh_y > y) then
-		begin
-			if (wh_y - y > 3) then wh_y := y + 3;
-		end
-	else
-		begin
-			if (y - wh_y > 3) then wh_y := y + 3;
-		end;
+	// Suspension
+	suspension[sus_y] := y;
+	wh_y := suspension[sus_wy];
+	incrange(sus_y, 0, 3);
+	incrange(sus_wy, 0, 3);
 end;
 
 // Find ground offset at x+offset
@@ -348,8 +376,6 @@ begin
 							jdir := 0;
 							state := s_stat;
 						end;
-	
-						wheeldiff();
 
 						drawTree[d_car] := 1;
 					end;
@@ -364,14 +390,8 @@ begin
 			find_ground(2);
 			wl_y_off := yoff;
 			find_ground(12);
-			wr_y_off := yoff;			
-
-			// Suspension
-			suspension[sus_y] := y;
-			wh_y := suspension[sus_wy];
-			incrange(sus_y, 0, 3);
-			incrange(sus_wy, 0, 3);
-
+			wr_y_off := yoff;
+			jumpsuspend();
 		end;
 
 		// Set up next ground tile when IRQ says ground needs new
@@ -384,5 +404,17 @@ begin
 				updowndir := updowndir xor 254;
 			end;
 		end;
+
+		// Set up next upper level tile when IRQ says ground needs new
+		// tile
+		if (drawTree[d_upper] = 0) then
+		begin
+			uppertile := uppertile + upperdir;
+			if (uppertile = 7 or uppertile = 0) then begin
+				upperdir := upperdir xor 254;
+			end;
+			drawTree[d_upper] := 1;
+		end;
+
 	end;
 end.
