@@ -1,0 +1,11 @@
+// Fisichella player zero page variables
+//
+	fis1 : byte at $36;
+	fis2 : byte at $37;
+	fis3 : byte at $38;
+	fis4 : byte at $39;  
+
+// Fisichella player variables in tape buffer.
+// Not reserved (hardcoded in asm), just displayed here for reminder
+//
+	@userdata $03E0 $03FF "Fisichella buf"
