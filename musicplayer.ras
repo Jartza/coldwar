@@ -6,7 +6,7 @@ begin
 	end;
 	
 	// Music player originally from Fisichella by Aleksi Eeben.
-	// Player disassembled and modified to be suitable with TRSE + VBM.
+	// Player disassembled with da65 and modified to be suitable with TRSE + VBM.
 	asm("
         dec     $03EC
         beq     L1C2F
