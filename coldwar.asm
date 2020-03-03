@@ -1340,7 +1340,7 @@ musicplayer_casenext8
 	bne musicplayer_casenext10
 	; 
 	; ****** Inline assembler section
-	jmp L1D9C
+    jmp L1D9C
 	
 	jmp musicplayer_caseend7
 musicplayer_casenext10
@@ -1349,7 +1349,7 @@ musicplayer_casenext10
 	bne musicplayer_casenext12
 	; 
 	; ****** Inline assembler section
-	jmp L1DDD
+    jmp L1DDD
 	
 	jmp musicplayer_caseend7
 musicplayer_casenext12
@@ -1360,7 +1360,7 @@ MUSICPLAY
         dec     $03EC
         beq     L1C2F
 L1C0B
-	    lda     #$0A
+        lda     #$0A
         sta     $3D
         ldx     #$00
         jsr     L1D1A
@@ -1524,9 +1524,7 @@ L1D32
         lda     musicData+384,y
         sta     $03F2,x
 L1D44
-        lda     #>musicData
-        clc
-        adc		#1
+        lda     #>musicData+1
         sta     $3C
         ldy     #$00
         lda     ($3B),y
@@ -1638,14 +1636,13 @@ drawcar
 	pha
 	tya
 	pha
+	; 
+	; ****** Inline assembler section
+    jsr MUSICPLAY
+	
 	
 ; // Play song
 ; //				screen_bg_color := WHITE + SCREEN_BG_BLACK;
-	; Assigning single variable : setstate
-	lda #0
-	sta setstate
-	jsr musicplayer
-	
 ; //				screen_bg_color := BLACK + SCREEN_BG_BLACK;
 ; // Clear previous car sprite
 	; ----------
@@ -2989,7 +2986,7 @@ MainProgram_elsedoneblock464
 MainProgram_elseblock123
 MainProgram_elsedoneblock124
 EndSymbol
-EndBlock354
+EndBlock216
 	org $3200
 carSprite
 	incbin "/Users/jartza/src/coldwar///export/sprite_carbody.bin"

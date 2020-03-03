@@ -189,9 +189,7 @@ L1D32
         lda     musicData+384,y
         sta     $03F2,x
 L1D44
-        lda     #>musicData
-        clc
-        adc		#1
+        lda     #>musicData+1
         sta     $3C
         ldy     #$00
         lda     ($3B),y

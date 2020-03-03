@@ -179,7 +179,7 @@ begin
 	
 	// Play song
 //				screen_bg_color := WHITE + SCREEN_BG_BLACK;
-	musicplayer(0);
+	asm("    jsr MUSICPLAY");
 
 //				screen_bg_color := BLACK + SCREEN_BG_BLACK;
 
