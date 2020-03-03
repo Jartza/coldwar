@@ -9,6 +9,7 @@ var
 	@vbmexport	"res/sprites/sprites.flf" 	"export/sprite_ground.bin"     160	162	1	1
 	@vbmexport	"res/sprites/sprites.flf" 	"export/sprite_updown.bin"     120	128	1	1
 	@vbmexport	"res/sprites/sprites.flf" 	"export/sprite_upperlevel.bin" 360	368	1	1
+	@vbmexport	"res/sprites/sprites.flf" 	"export/sprite_letters.bin"    400	412	2	1
 	@export		"res/char/font4x8.flf" 		"export/font4x8.bin"           0 	64
 
 	// Memory addresses for sprites & tiles
@@ -168,6 +169,11 @@ var
     score: array[] of byte = ($00, $00, $00);
     scoreadd: array[] of byte = ($01, $00, $00);
 
+
+
+	// Include music player variables and player code itself
+	//
+	@include "musicplayervars.ras"	
 	@include "musicplayer.ras"
 
 
@@ -265,7 +271,7 @@ begin
 	incrange(ucnt, 0, 16);
 	incrange(uscnt, 0, 4);
 
-				screen_bg_color := BLUE + SCREEN_BG_BLACK;
+//				screen_bg_color := BLUE + SCREEN_BG_BLACK;
 
 	// Restore the processor registers and complete our interrupt
 	closeIRQ();
@@ -324,7 +330,7 @@ begin
 	vbmClearColor(WHITE + MULTICOLOR);
 	
 	// Set other colors, plus audio volume
-	AUX_COLOR_AND_VOLUME := RED * 15 + 14;
+	AUX_COLOR_AND_VOLUME := RED * 15 + 15;
 	screen_bg_color := BLUE + SCREEN_BG_BLACK;
 
 	for i:=0 to 20 do

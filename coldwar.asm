@@ -62,6 +62,10 @@ scoretitle
 	dc.b	$13, $03, $0f, $12, $05, $3a, 0
 score	dc.b $00, $00, $00
 scoreadd	dc.b $01, $00, $00
+mp1 = $35
+mp2 = $36
+mp3 = $37
+mp4 = $38
 	
 	
 	; ***********  Defining procedure : init16x8mul
@@ -1320,6 +1324,12 @@ initrandom256_RandomSkip5
 ; // Used for y offset calculations
 ; // Jump direction
 ; // Some misc stuff, probably to be removed later
+; // Include music player variables and player code itself
+; //
+; // Music player variables in zero page
+; //
+; // Music player buffer in tape buffer
+; //
 	
 	
 	; ***********  Defining procedure : musicplayer
@@ -2152,12 +2162,8 @@ drawcar_incmax59
 	
 	sta uscnt
 drawcar_incmax61
-	; Assigning memory location
-	; Assigning single variable : $900f
-	lda #14
 	
-	sta $900f
-	
+; //				screen_bg_color := BLUE + SCREEN_BG_BLACK;
 ; // Restore the processor registers and complete our interrupt
 	; CloseIRQ
 	pla
@@ -2370,7 +2376,7 @@ MainProgram_vbmCC_loop99
 ; // Set other colors, plus audio volume
 	; Assigning memory location
 	; Assigning single variable : $900e
-	lda #44
+	lda #45
 	
 	sta $900e
 	; Assigning memory location
@@ -2977,7 +2983,7 @@ MainProgram_elsedoneblock462
 MainProgram_elseblock121
 MainProgram_elsedoneblock122
 EndSymbol
-EndBlock354
+EndBlock2424
 	org $3200
 carSprite
 	incbin "/Users/jartza/src/coldwar///export/sprite_carbody.bin"
