@@ -2,8 +2,8 @@ Procedure musicplayer(setstate:byte);
 begin
 	case setstate of
 		0: asm("    jmp MUSICPLAY");
-		1: asm("	jmp L1D9C");
-		2: asm("	jmp L1DDD");
+		1: asm("    jmp L1D9C");
+		2: asm("    jmp L1DDD");
 	end;
 	
 	// Music player originally from Fisichella by Aleksi Eeben.
