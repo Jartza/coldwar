@@ -1,0 +1,285 @@
+Procedure musicplayer(setstate:byte);
+begin
+	case setstate of
+		1: asm("	jmp L1D9C");
+		2: asm("	jmp L1DDD");
+	end;
+	
+	// Music player originally from Fisichella by Aleksi Eeben.
+	// Player disassembled and modified to be suitable with TRSE + VBM.
+	asm("
+        dec     $03EC
+        beq     L1C2F
+L1C0B
+	    lda     #$0A
+        sta     $3D
+        ldx     #$00
+        jsr     L1D1A
+        inc     $3D
+        ldx     #$04
+        jsr     L1D1A
+        inc     $3D
+        ldx     #$08
+        jsr     L1D1A
+        inc     $3D
+        ldx     #$0C
+        jsr     L1D1A
+        lda     $03EF
+        bne     L1C84
+        rts
+
+L1C2F   
+		lda     $03ED
+        sta     $03EC
+        lda     $03EA
+        cmp     #$FF
+        beq     L1C0B
+        ldx     #$00
+        jsr     L1CCD
+        ldx     #$04
+        jsr     L1CCD
+        ldx     #$08
+        jsr     L1CCD
+        ldx     #$0C
+        jsr     L1CCD
+        inc     $03EB
+        lda     $03EB
+        and     #$0F
+        bne     L1C0B
+        sta     $03EB
+        lda     $03EA
+        clc
+        adc     #$04
+        sta     $03EA
+L1C66
+        tay
+        lda     musicData,y
+        cmp     #$FE
+        beq     L1C77
+        sta     $03F0
+        jsr     L1DCA
+        jmp     L1C0B
+
+L1C77
+        lda     musicData+1,y
+        sta     $03EA
+        cmp     #$FF
+        bne     L1C66
+        jmp     L1C0B
+
+L1C84
+        dec     $03EE
+        beq     L1C8A
+        rts
+
+L1C8A
+        lda     #$80
+        sta     $3B
+        lda     #$37
+        sta     $3C
+        ldy     $03EF
+L1C95
+        lda     ($3B),y
+        ror
+        ror
+        ror
+        ror
+        and     #$0F
+        sta     $3D
+        lda     ($3B),y
+        and     #$0F
+        beq     L1CB7
+        sta     $03EE
+        lda     $900E
+        and     #$F0
+        ora     $3D
+        sta     $900E
+        iny
+        sty     $03EF
+        rts
+
+L1CB7
+        lda     $3D
+        beq     L1CC9
+        lda     $03EF
+        and     #$F0
+        ora     $3D
+        sta     $03EF
+        tay
+        jmp     L1C95
+
+L1CC9
+        sta     $03EF
+        rts
+
+L1CCD
+        ldy     $03EB
+        lda     $03F0,x
+        bmi     L1CE5
+        sta     $3D
+        and     #$70
+        ora     #$80
+        sta     $3B
+        lda     #>musicData
+        sta     $3C
+        lda     ($3B),y
+        bne     L1CE6
+L1CE5
+        rts
+
+L1CE6
+        and     #$1F
+        sta     $3E
+        lda     $3D
+        and     #$0F
+        sec
+        sbc     #$08
+        clc
+        adc     $3E
+        sta     $03F1,x
+        lda     #$01
+        sta     $03F2,x
+        lda     ($3B),y
+        ror
+        and     #$70
+        sta     $03F3,x
+        ror
+        ror
+        ror
+        ror
+        and     #$07
+        tay
+        lda     musicData+392,y
+        bne     L1D11
+        rts
+
+L1D11
+        sta     $03EF
+        lda     #$01
+        sta     $03EE
+        rts
+
+L1D1A
+        lda     $03F3,x
+        cmp     #$FF
+        beq     L1D31
+        dec     $03F2,x
+        beq     L1D32
+        rts
+
+L1D27
+        ldy     $3D
+        sta     $9000,y
+        lda     #$FF
+        sta     $03F3,x
+L1D31
+        rts
+
+L1D32
+        lda     $03F3,x
+        sta     $3B
+        ror
+        ror
+        ror
+        ror
+        and     #$0F
+        tay
+        lda     musicData+384,y
+        sta     $03F2,x
+L1D44
+        lda     #>musicData
+        clc
+        adc		#1
+        sta     $3C
+        ldy     #$00
+        lda     ($3B),y
+        beq     L1D27
+        cmp     #$10
+        bcc     L1D8A
+        and     #$1F
+        clc
+        adc     #$10
+        sta     $3E
+        lda     $03F1,x
+        clc
+        adc     $3E
+        tay
+        cpy     #$40
+        bcc     L1D66
+        ldy     #$3F
+L1D66
+        cpy     #$C0
+        bcc     L1D6C
+        ldy     #$00
+L1D6C
+        lda     musicData+448,y
+        sta     $3E
+        ldy     #$00
+        lda     ($3B),y
+        rol
+        rol
+        rol
+        rol
+        and     #$07
+        sec
+        sbc     #$04
+        clc
+        adc     $3E
+        ldy     $3D
+        sta     $9000,y
+        inc     $03F3,x
+        rts
+
+L1D8A
+        and     #$0F
+        sta     $3E
+        lda     $3B
+        and     #$F0
+        ora     $3E
+        sta     $3B
+        sta     $03F3,x
+        jmp     L1D44
+
+L1D9C
+        jsr     L1DDD
+        lda     L1DFF
+        sta     $03ED
+        lda     #$01
+        sta     $03EC
+        lda     #$FF
+        sta     $03F3
+        sta     $03F7
+        sta     $03FB
+        sta     $03FF
+        lda     $900E
+        and     #$F0
+        ora     #$08
+        sta     $900E
+        lda     musicData
+        sta     $03F0
+        ldy     #$00
+L1DCA
+        lda     musicData+1,y
+        sta     $03F4
+        lda     musicData+2,y
+        sta     $03F8
+        lda     musicData+3,y
+        sta     $03FC
+        rts
+L1DDD
+        lda     #$00
+        ldy     #$15
+L1DE1
+        sta     $03EA,y
+        cpy     #$04
+        bcs     L1DEB
+        sta     $900A,y
+L1DEB
+        dey
+        bpl     L1DE1
+        rts
+
+L1DFF
+        .byte   $06
+	");
+end;

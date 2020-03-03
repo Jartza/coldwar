@@ -1,6 +1,5 @@
 program ColdWar;
 var
-   
 	// Address of bitmap (screen and characters)
 	@userdata $1000 $1FFF "Bitmap"
 
@@ -13,12 +12,16 @@ var
 	@export		"res/char/font4x8.flf" 		"export/font4x8.bin" 			0 	64
 
 	// Memory addresses for sprites & tiles
-	const addrCarBody:	address = $3800;
+	const addrCarBody:	address = $3200;
 	const addrWheel:	address = addrCarBody + 96;
 	const addrGround:	address = addrWheel + 64;
 	const addrUpdown:	address = addrGround + 16;
 	const addrFont:		address = addrUpdown + 64;
 	const addrUpper:	address = addrFont + 512;
+	const addrMusic:	address = $3600;
+
+	// Virtual
+	const addrNumbers:	address = addrFont + 384;
 
 	// Include exported resources into binary at specified address
 	carSprite: incbin("export/sprite_carbody.bin", addrCarBody);
@@ -27,9 +30,10 @@ var
 	updownTile: incbin("export/sprite_updown.bin", addrUpdown);
 	smallFont: incbin("export/font4x8.bin", addrFont);
 	upperLevel: incbin("export/sprite_upperlevel.bin", addrUpper);
+	musicData: incbin("export/imono.bin", @addrMusic);
 
 	@startblock $2000 "game"
-
+	
 	// Pre-shifted address-table for car body sprite
 	carbody_L: array[] of integer = (
 		addrCarBody, addrCarBody+24, addrCarBody+48, addrCarBody+72
@@ -158,6 +162,12 @@ var
 	uppertile: byte = 0;
 	upperdir: byte = 1;
     message: cstring = ("COLD WAR - little buggy game");
+    scoretitle: cstring = ("SCORE:");
+    score: array[] of byte = ($00, $00, $00);
+    scoreadd: array[] of byte = ($01, $00, $00);
+
+	@include "musicplayer.ras"
+
 
 // Interrupt function that handles all the screen drawing
 // starting from certain raster line to avoid flicker
@@ -166,6 +176,10 @@ procedure drawcar();
 begin
 	// Store the processors registers
 	StartIRQ(0);
+	
+	// Play song
+//				screen_bg_color := WHITE + SCREEN_BG_BLACK;
+	musicplayer(0);
 
 //				screen_bg_color := BLACK + SCREEN_BG_BLACK;
 
@@ -176,10 +190,10 @@ begin
 	// Clear old wheels
 	vbmSetPosition2(old_x, old_wh_y + old_wl_y_off + 10);
 	vbmDrawSprite8E(wheel_L, wheel_R);
-	vbmSetPosition2(old_x+8, old_wh_y + old_wr_y_off + 10);
+	vbmSetPosition2(old_x+10, old_wh_y + old_wr_y_off + 10);
 	vbmDrawSprite8E(wheel_L, wheel_R);
 
-	if (scnt & 1) then
+//	if (scnt & 1) then
 	begin
 		vbmScreenShiftLeft(176,192);
 		vbmScreenShiftLeft(176,192);
@@ -187,8 +201,8 @@ begin
 
 	if (uscnt = 0) then
 	begin
-		vbmScreenShiftLeft(118,126);
-		vbmScreenShiftLeft(118,126);
+		vbmScreenShiftLeft(134,142);
+		vbmScreenShiftLeft(134,142);
 	end;
 
 	// Stars
@@ -217,7 +231,7 @@ begin
 	// Draw new upper level piece
 	if (drawTree[d_upper] = 1 and ucnt = 0) then
 	begin
-		vbmSetPosition2(152, 118);
+		vbmSetPosition2(152, 134);
 		p1 := int2ptr(upper_T[uppertile]);
 		vbmDrawTile(p1);
 		drawTree[d_upper] := 0;
@@ -231,7 +245,7 @@ begin
 	// Draw wheels
 	vbmSetPosition2(x, wh_y + wl_y_off + 10);
 	vbmDrawSprite8E(wheel_L, wheel_R);
-	vbmSetPosition2(x+8, wh_y + wr_y_off + 10);
+	vbmSetPosition2(x+10, wh_y + wr_y_off + 10);
 	vbmDrawSprite8E(wheel_L, wheel_R);
 	drawTree[d_car] := 0;
 	old_x := x;
@@ -243,13 +257,13 @@ begin
 
 	// Increase counters
 	inc(scnt);
-	incrange(gcnt, 0, 8);
+	incrange(gcnt, 0, 4);
 	incrange(mcnt, 0, 2);
 	incrange(bcnt, 0, 3);
 	incrange(ucnt, 0, 16);
 	incrange(uscnt, 0, 4);
 
-//				screen_bg_color := BLUE + SCREEN_BG_BLACK;
+				screen_bg_color := BLUE + SCREEN_BG_BLACK;
 
 	// Restore the processor registers and complete our interrupt
 	closeIRQ();
@@ -295,6 +309,9 @@ end;
 // Main body, handle all initialization and
 // game logic and joystick controls.
 begin
+	// Init music player
+	musicplayer(1);
+
 	// Initialize display mode to 19 column
 	vbmSetDisplayMode(1);
 	
@@ -304,9 +321,8 @@ begin
 	// Clear color memory with WHITE and set MULTICOLOR flag
 	vbmClearColor(WHITE + MULTICOLOR);
 	
-
 	// Set other colors, plus audio volume
-	AUX_COLOR_AND_VOLUME := RED * 15 + 15;
+	AUX_COLOR_AND_VOLUME := RED * 15 + 14;
 	screen_bg_color := BLUE + SCREEN_BG_BLACK;
 
 	for i:=0 to 20 do
@@ -324,17 +340,8 @@ begin
 		vbmDrawDot((random() >> 2) + 88 , 40 + (i * 10));
 	end;
 
-	// Test
-	t := 100;
-	for i:=0 to 255 do
-	begin
-		vbmDrawDot(t, 12);
-		decrange(t, 255, 159);
-	end;
-
-
     // Draw "title" text
-    vbmDrawSmallTextE(message, smallFont, 5, 1, 6);
+    vbmDrawSmallTextE(scoretitle, smallFont, 0, 0, 6);
     
 	// Set upper two rows to hires single color
 	fill(screen_col_loc, WHITE, 20);
@@ -342,7 +349,7 @@ begin
 	// Set up an raster interrupt to call outside visible screen,
 	// params: IRQ function, raster line, PAL/NTSC (0/1)
 	DisableVIC20IRQ();
-	VIARasterIRQ(drawcar(), 112, 0);
+	VIARasterIRQ(drawcar(), 124, 0);
 
 	// Main game logic runs here in loop
 	while(true) offpage do
@@ -361,7 +368,7 @@ begin
 						xdir := x_none;
 						if (joy1 & JOY_RIGHT) then buggy_right(2);
 						if (joy1 & JOY_LEFT) then buggy_left(2);
-						if (joy1 & JOY_DOWN) then state := s_jump;
+						if (joy1 & JOY_UP) then state := s_jump;
 						drawTree[d_car] := 1;
 					end;
 				// In jump
@@ -370,7 +377,7 @@ begin
 						if (xdir = x_right) then buggy_right(1);
 						if (xdir = x_left) then buggy_left(1);
 						if (jdir = 0) then y:=y-2 else y:=y+2;
-						if (y < 120) then jdir := 1;
+						if (y < 110) then jdir := 1;
 						if (y = 156) then
 						begin
 							jdir := 0;
@@ -413,6 +420,8 @@ begin
 			if (uppertile = 7 or uppertile = 0) then begin
 				upperdir := upperdir xor 254;
 			end;
+			bcdadd(score, scoreadd, 3);
+			vbmdrawsmallbcd(score, addrNumbers, 6, 0, 3);
 			drawTree[d_upper] := 1;
 		end;
 
