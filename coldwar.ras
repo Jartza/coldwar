@@ -30,6 +30,8 @@ var
 	updownTile: incbin("export/sprite_updown.bin", addrUpdown);
 	smallFont: incbin("export/font4x8.bin", addrFont);
 	upperLevel: incbin("export/sprite_upperlevel.bin", addrUpper);
+	
+	// Import music. Made with Fisichella, song by Jojeli
 	musicData: incbin("export/imono.bin", @addrMusic);
 
 	@startblock $2000 "game"

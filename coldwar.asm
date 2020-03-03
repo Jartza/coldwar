@@ -1329,30 +1329,23 @@ setstate	dc.b
 musicplayer_block6
 musicplayer
 	lda setstate
-	cmp #$0 ;keep
-	bne musicplayer_casenext8
-	; 
-	; ****** Inline assembler section
-	
-musicplayer_casenext8
-	lda setstate
 	cmp #$1 ;keep
-	bne musicplayer_casenext10
+	bne musicplayer_casenext8
 	; 
 	; ****** Inline assembler section
     jmp L1D9C
 	
 	jmp musicplayer_caseend7
-musicplayer_casenext10
+musicplayer_casenext8
 	lda setstate
 	cmp #$2 ;keep
-	bne musicplayer_casenext12
+	bne musicplayer_casenext10
 	; 
 	; ****** Inline assembler section
     jmp L1DDD
 	
 	jmp musicplayer_caseend7
-musicplayer_casenext12
+musicplayer_casenext10
 musicplayer_caseend7
 	; 
 	; ****** Inline assembler section
@@ -1575,7 +1568,7 @@ L1D8A
         jmp     L1D44
 L1D9C
         jsr     L1DDD
-        lda     L1DFF
+        lda     #$06
         sta     $03ED
         lda     #$01
         sta     $03EC
@@ -1611,8 +1604,6 @@ L1DEB
         dey
         bpl     L1DE1
         rts
-L1DFF
-        .byte   $06
 	
 	
 	rts
@@ -1775,8 +1766,8 @@ drawcar
 	lda uscnt
 	; Compare with pure num / var optimization
 	cmp #$0;keep
-	bne drawcar_elsedoneblock18
-drawcar_ConditionalTrueBlock16
+	bne drawcar_elsedoneblock16
+drawcar_ConditionalTrueBlock14
 	; Screen Shift Left
 	lda #142
 	sta vbmY
@@ -1787,14 +1778,14 @@ drawcar_ConditionalTrueBlock16
 	sta vbmY
 	ldx #134 ; optimized, look out for bugs
 	jsr vbmScreenShiftLeft
-drawcar_elseblock17
-drawcar_elsedoneblock18
+drawcar_elseblock15
+drawcar_elsedoneblock16
 	; Binary clause Simplified: EQUALS
 	lda bcnt
 	; Compare with pure num / var optimization
 	cmp #$0;keep
-	bne drawcar_elsedoneblock24
-drawcar_ConditionalTrueBlock22
+	bne drawcar_elsedoneblock22
+drawcar_ConditionalTrueBlock20
 	
 ; // Stars
 	; Screen Shift Left
@@ -1812,14 +1803,14 @@ drawcar_ConditionalTrueBlock22
 	sta vbmY
 	ldx #90 ; optimized, look out for bugs
 	jsr vbmScreenShiftLeft
-drawcar_elseblock23
-drawcar_elsedoneblock24
+drawcar_elseblock21
+drawcar_elsedoneblock22
 	; Binary clause Simplified: EQUALS
 	lda mcnt
 	; Compare with pure num / var optimization
 	cmp #$0;keep
-	bne drawcar_elsedoneblock30
-drawcar_ConditionalTrueBlock28
+	bne drawcar_elsedoneblock28
+drawcar_ConditionalTrueBlock26
 	; Screen Shift Left
 	lda #41
 	sta vbmY
@@ -1835,8 +1826,8 @@ drawcar_ConditionalTrueBlock28
 	sta vbmY
 	ldx #80 ; optimized, look out for bugs
 	jsr vbmScreenShiftLeft
-drawcar_elseblock29
-drawcar_elsedoneblock30
+drawcar_elseblock27
+drawcar_elsedoneblock28
 	; Binary clause: EQUALS
 	; Load Byte array
 	ldx #$1
@@ -1845,16 +1836,16 @@ drawcar_elsedoneblock30
 	; Compare with pure num / var optimization
 	cmp #$1;keep
 	; BC done
-	bne drawcar_elseblock35
-drawcar_binaryclausesuccess39
+	bne drawcar_elseblock33
+drawcar_binaryclausesuccess37
 	; Binary clause: EQUALS
 	lda gcnt
 	; Compare with pure num / var optimization
 	cmp #$0;keep
 	; BC done
-	bne drawcar_elseblock35
-drawcar_binaryclausesuccess41
-drawcar_ConditionalTrueBlock34
+	bne drawcar_elseblock33
+drawcar_binaryclausesuccess39
+drawcar_ConditionalTrueBlock32
 	
 ; // Draw new ground piece
 	; ----------
@@ -1906,8 +1897,8 @@ drawcar_ConditionalTrueBlock34
 	ldx #1 ; optimized, look out for bugs
 	lda #0
 	sta drawTree,x
-drawcar_elseblock35
-drawcar_elsedoneblock36
+drawcar_elseblock33
+drawcar_elsedoneblock34
 	; Binary clause: EQUALS
 	; Load Byte array
 	ldx #$2
@@ -1916,16 +1907,16 @@ drawcar_elsedoneblock36
 	; Compare with pure num / var optimization
 	cmp #$1;keep
 	; BC done
-	bne drawcar_elseblock45
-drawcar_binaryclausesuccess49
+	bne drawcar_elseblock43
+drawcar_binaryclausesuccess47
 	; Binary clause: EQUALS
 	lda ucnt
 	; Compare with pure num / var optimization
 	cmp #$0;keep
 	; BC done
-	bne drawcar_elseblock45
-drawcar_binaryclausesuccess51
-drawcar_ConditionalTrueBlock44
+	bne drawcar_elseblock43
+drawcar_binaryclausesuccess49
+drawcar_ConditionalTrueBlock42
 	
 ; // Draw new upper level piece
 	; ----------
@@ -1977,8 +1968,8 @@ drawcar_ConditionalTrueBlock44
 	ldx #2 ; optimized, look out for bugs
 	lda #0
 	sta drawTree,x
-drawcar_elseblock45
-drawcar_elsedoneblock46
+drawcar_elseblock43
+drawcar_elsedoneblock44
 	
 ; // Draw new car sprite
 	; ----------
@@ -2124,43 +2115,43 @@ drawcar_elsedoneblock46
 	inc gcnt
 	lda gcnt
 	cmp #$4 ; keep
-	bne drawcar_incmax55
+	bne drawcar_incmax53
 	lda #0
 	
 	sta gcnt
-drawcar_incmax55
+drawcar_incmax53
 	inc mcnt
 	lda mcnt
 	cmp #$2 ; keep
-	bne drawcar_incmax57
+	bne drawcar_incmax55
 	lda #0
 	
 	sta mcnt
-drawcar_incmax57
+drawcar_incmax55
 	inc bcnt
 	lda bcnt
 	cmp #$3 ; keep
-	bne drawcar_incmax59
+	bne drawcar_incmax57
 	lda #0
 	
 	sta bcnt
-drawcar_incmax59
+drawcar_incmax57
 	inc ucnt
 	lda ucnt
 	cmp #$10 ; keep
-	bne drawcar_incmax61
+	bne drawcar_incmax59
 	lda #0
 	
 	sta ucnt
-drawcar_incmax61
+drawcar_incmax59
 	inc uscnt
 	lda uscnt
 	cmp #$4 ; keep
-	bne drawcar_incmax63
+	bne drawcar_incmax61
 	lda #0
 	
 	sta uscnt
-drawcar_incmax63
+drawcar_incmax61
 	; Assigning memory location
 	; Assigning single variable : $900f
 	lda #14
@@ -2188,25 +2179,25 @@ limit_x
 	lda x
 	; Compare with pure num / var optimization
 	cmp #$8;keep
-	bcs limit_x_elsedoneblock68
-limit_x_ConditionalTrueBlock66
+	bcs limit_x_elsedoneblock66
+limit_x_ConditionalTrueBlock64
 	; Assigning single variable : x
 	lda #8
 	sta x
-limit_x_elseblock67
-limit_x_elsedoneblock68
+limit_x_elseblock65
+limit_x_elsedoneblock66
 	; Binary clause Simplified: GREATER
 	lda x
 	; Compare with pure num / var optimization
 	cmp #$78;keep
-	bcc limit_x_elsedoneblock74
-	beq limit_x_elsedoneblock74
-limit_x_ConditionalTrueBlock72
+	bcc limit_x_elsedoneblock72
+	beq limit_x_elsedoneblock72
+limit_x_ConditionalTrueBlock70
 	; Assigning single variable : x
 	lda #120
 	sta x
-limit_x_elseblock73
-limit_x_elsedoneblock74
+limit_x_elseblock71
+limit_x_elsedoneblock72
 	rts
 	
 ; // Move buggy right
@@ -2216,7 +2207,7 @@ limit_x_elsedoneblock74
 	;    Procedure type : User-defined procedure
 	
 incamount	dc.b	
-buggy_right_block77
+buggy_right_block75
 buggy_right
 	; Assigning single variable : x
 	; 8 bit binop
@@ -2239,7 +2230,7 @@ buggy_right
 	;    Procedure type : User-defined procedure
 	
 decamount	dc.b	
-buggy_left_block78
+buggy_left_block76
 buggy_left
 	; Assigning single variable : x
 	; 8 bit binop
@@ -2278,19 +2269,19 @@ jumpsuspend
 	inc sus_y
 	lda sus_y
 	cmp #$3 ; keep
-	bne jumpsuspend_incmax81
+	bne jumpsuspend_incmax79
 	lda #0
 	
 	sta sus_y
-jumpsuspend_incmax81
+jumpsuspend_incmax79
 	inc sus_wy
 	lda sus_wy
 	cmp #$3 ; keep
-	bne jumpsuspend_incmax83
+	bne jumpsuspend_incmax81
 	lda #0
 	
 	sta sus_wy
-jumpsuspend_incmax83
+jumpsuspend_incmax81
 	rts
 	
 ; // Find ground offset at x+offset
@@ -2300,12 +2291,12 @@ jumpsuspend_incmax83
 	;    Procedure type : User-defined procedure
 	
 xoffset	dc.b	
-find_ground_block84
+find_ground_block82
 find_ground
 	; Assigning single variable : i
 	lda #0
 	sta i
-find_ground_for85
+find_ground_for83
 	; Binary clause Simplified: EQUALS
 	; ----------
 	; vbmTestPixel2 x, y  - can be used to test for multi-color mode pixels
@@ -2329,18 +2320,18 @@ find_ground_for85
 	
 	; Compare with pure num / var optimization
 	cmp #$0;keep
-	bne find_ground_elsedoneblock98
-find_ground_ConditionalTrueBlock96
+	bne find_ground_elsedoneblock96
+find_ground_ConditionalTrueBlock94
 	; Assigning single variable : yoff
 	lda i
 	sta yoff
-find_ground_elseblock97
-find_ground_elsedoneblock98
+find_ground_elseblock95
+find_ground_elsedoneblock96
 	inc i
 	lda #8
 	cmp i ;keep
-	bne find_ground_for85
-find_ground_forLoopDone93
+	bne find_ground_for83
+find_ground_forLoopDone91
 	rts
 block1
 	
@@ -2371,10 +2362,10 @@ block1
 	sta screenmemory
 	lda #9
 	ldy #241 ; colour mem to clear (stops at zero so +1)
-MainProgram_vbmCC_loop101
+MainProgram_vbmCC_loop99
 	sta (screenmemory),y
 	dey
-	bne MainProgram_vbmCC_loop101
+	bne MainProgram_vbmCC_loop99
 	
 ; // Set other colors, plus audio volume
 	; Assigning memory location
@@ -2390,7 +2381,7 @@ MainProgram_vbmCC_loop101
 	; Assigning single variable : i
 	lda #0
 	sta i
-MainProgram_for102
+MainProgram_for100
 	; ----------
 	; vbmSetPosition2 x, y
 	lda #184
@@ -2454,12 +2445,12 @@ MainProgram_for102
 	inc i
 	lda #20
 	cmp i ;keep
-	bne MainProgram_for102
-MainProgram_forLoopDone104
+	bne MainProgram_for100
+MainProgram_forLoopDone102
 	; Assigning single variable : i
 	lda #0
 	sta i
-MainProgram_for106
+MainProgram_for104
 	
 ; // Draw "stars"
 	; ----------
@@ -2529,8 +2520,8 @@ MainProgram_for106
 	inc i
 	lda #5
 	cmp i ;keep
-	bcs MainProgram_for106
-MainProgram_forLoopDone112
+	bcs MainProgram_for104
+MainProgram_forLoopDone110
 	
 ; // Draw "title" text
 	; Draw 4x8 text to the bitmap with EOR operation
@@ -2554,11 +2545,11 @@ MainProgram_forLoopDone112
 ; // Set upper two rows to hires single color
 	lda #1
 	ldx #0
-MainProgram_fill118
+MainProgram_fill116
 	sta $9400,x
 	inx
 	cpx #20
-	bne MainProgram_fill118
+	bne MainProgram_fill116
 	
 ; // Set up an raster interrupt to call outside visible screen,
 ; // params: IRQ function, raster line, PAL/NTSC(0/1)
@@ -2571,38 +2562,38 @@ MainProgram_fill118
 	sta pointers_vic_raster+6
 	ldx #124 ; optimized, look out for bugs
 	lda #0
-	bne MainProgram_viarasterirq_ntsc_timing119
+	bne MainProgram_viarasterirq_ntsc_timing117
 	lda #$86
 	sta timers_vic_raster+1
 	lda #$56
 	sta timers_vic_raster+3
 	jsr A0_vic_raster
-	jmp MainProgram_viarasterirq_end120
-MainProgram_viarasterirq_ntsc_timing119
+	jmp MainProgram_viarasterirq_end118
+MainProgram_viarasterirq_ntsc_timing117
 	lda #$43
 	sta timers_vic_raster+1
 	lda #$42
 	sta timers_vic_raster+3
 	jsr A0_vic_raster
-MainProgram_viarasterirq_end120
-MainProgram_while121
+MainProgram_viarasterirq_end118
+MainProgram_while119
 	; Full binary clause
 	; Binary clause: NOTEQUALS
 	lda #1
 	; Compare with pure num / var optimization
 	cmp #$0;keep
 	; BC done
-	beq MainProgram_binaryclausefailed308
-MainProgram_binaryclausesuccess310
+	beq MainProgram_binaryclausefailed306
+MainProgram_binaryclausesuccess308
 	lda #1; success
-	jmp MainProgram_binaryclausefinished309
-MainProgram_binaryclausefailed308
+	jmp MainProgram_binaryclausefinished307
+MainProgram_binaryclausefailed306
 	lda #0 ; failed state
-MainProgram_binaryclausefinished309
+MainProgram_binaryclausefinished307
 	cmp #1
-	beq MainProgram_ConditionalTrueBlock122
-	jmp MainProgram_elsedoneblock124
-MainProgram_ConditionalTrueBlock122
+	beq MainProgram_ConditionalTrueBlock120
+	jmp MainProgram_elsedoneblock122
+MainProgram_ConditionalTrueBlock120
 	
 ; // Main game logic runs here in loop
 ; // Read joystick
@@ -2616,35 +2607,35 @@ MainProgram_ConditionalTrueBlock122
 	; Compare with pure num / var optimization
 	cmp #$0;keep
 	; BC done
-	bne MainProgram_binaryclausefailed371
-MainProgram_binaryclausesuccess373
+	bne MainProgram_binaryclausefailed369
+MainProgram_binaryclausesuccess371
 	lda #1; success
-	jmp MainProgram_binaryclausefinished372
-MainProgram_binaryclausefailed371
+	jmp MainProgram_binaryclausefinished370
+MainProgram_binaryclausefailed369
 	lda #0 ; failed state
-MainProgram_binaryclausefinished372
-MainProgram_logical_class_temp_var374 = $88
-	sta MainProgram_logical_class_temp_var374
+MainProgram_binaryclausefinished370
+MainProgram_logical_class_temp_var372 = $88
+	sta MainProgram_logical_class_temp_var372
 	; Binary clause: EQUALS
 	lda mcnt
 	; Compare with pure num / var optimization
 	cmp #$0;keep
 	; BC done
-	bne MainProgram_binaryclausefailed375
-MainProgram_binaryclausesuccess377
+	bne MainProgram_binaryclausefailed373
+MainProgram_binaryclausesuccess375
 	lda #1; success
-	jmp MainProgram_binaryclausefinished376
-MainProgram_binaryclausefailed375
+	jmp MainProgram_binaryclausefinished374
+MainProgram_binaryclausefailed373
 	lda #0 ; failed state
-MainProgram_binaryclausefinished376
-	and MainProgram_logical_class_temp_var374
+MainProgram_binaryclausefinished374
+	and MainProgram_logical_class_temp_var372
 	cmp #1
-	beq MainProgram_ConditionalTrueBlock313
-	jmp MainProgram_elsedoneblock315
-MainProgram_ConditionalTrueBlock313
+	beq MainProgram_ConditionalTrueBlock311
+	jmp MainProgram_elsedoneblock313
+MainProgram_ConditionalTrueBlock311
 	lda state
 	cmp #$0 ;keep
-	bne MainProgram_casenext380
+	bne MainProgram_casenext378
 	
 ; // Handle buggy drawing and moving when IRQ says the car has
 ; // been redrawn
@@ -2661,14 +2652,14 @@ MainProgram_ConditionalTrueBlock313
 	
 	; Compare with pure num / var optimization
 	cmp #$0;keep
-	beq MainProgram_elsedoneblock385
-MainProgram_ConditionalTrueBlock383
+	beq MainProgram_elsedoneblock383
+MainProgram_ConditionalTrueBlock381
 	; Assigning single variable : incamount
 	lda #2
 	sta incamount
 	jsr buggy_right
-MainProgram_elseblock384
-MainProgram_elsedoneblock385
+MainProgram_elseblock382
+MainProgram_elsedoneblock383
 	; Binary clause Simplified: NOTEQUALS
 	; 8 bit binop
 	; Add/sub where right value is constant number
@@ -2678,14 +2669,14 @@ MainProgram_elsedoneblock385
 	
 	; Compare with pure num / var optimization
 	cmp #$0;keep
-	beq MainProgram_elsedoneblock391
-MainProgram_ConditionalTrueBlock389
+	beq MainProgram_elsedoneblock389
+MainProgram_ConditionalTrueBlock387
 	; Assigning single variable : decamount
 	lda #2
 	sta decamount
 	jsr buggy_left
-MainProgram_elseblock390
-MainProgram_elsedoneblock391
+MainProgram_elseblock388
+MainProgram_elsedoneblock389
 	; Binary clause Simplified: NOTEQUALS
 	; 8 bit binop
 	; Add/sub where right value is constant number
@@ -2695,102 +2686,102 @@ MainProgram_elsedoneblock391
 	
 	; Compare with pure num / var optimization
 	cmp #$0;keep
-	beq MainProgram_elsedoneblock397
-MainProgram_ConditionalTrueBlock395
+	beq MainProgram_elsedoneblock395
+MainProgram_ConditionalTrueBlock393
 	; Assigning single variable : state
 	lda #2
 	sta state
-MainProgram_elseblock396
-MainProgram_elsedoneblock397
+MainProgram_elseblock394
+MainProgram_elsedoneblock395
 	; Assigning single variable : drawTree
 	; Store Variable simplified optimization : right-hand term is pure
 	ldx #0 ; optimized, look out for bugs
 	lda #1
 	sta drawTree,x
-	jmp MainProgram_caseend379
-MainProgram_casenext380
+	jmp MainProgram_caseend377
+MainProgram_casenext378
 	lda state
 	cmp #$2 ;keep
-	bne MainProgram_casenext400
+	bne MainProgram_casenext398
 	; Binary clause Simplified: EQUALS
 	lda xdir
 	; Compare with pure num / var optimization
 	cmp #$2;keep
-	bne MainProgram_elsedoneblock405
-MainProgram_ConditionalTrueBlock403
+	bne MainProgram_elsedoneblock403
+MainProgram_ConditionalTrueBlock401
 	
 ; // In jump
 	; Assigning single variable : incamount
 	lda #1
 	sta incamount
 	jsr buggy_right
-MainProgram_elseblock404
-MainProgram_elsedoneblock405
+MainProgram_elseblock402
+MainProgram_elsedoneblock403
 	; Binary clause Simplified: EQUALS
 	lda xdir
 	; Compare with pure num / var optimization
 	cmp #$1;keep
-	bne MainProgram_elsedoneblock411
-MainProgram_ConditionalTrueBlock409
+	bne MainProgram_elsedoneblock409
+MainProgram_ConditionalTrueBlock407
 	; Assigning single variable : decamount
 	lda #1
 	sta decamount
 	jsr buggy_left
-MainProgram_elseblock410
-MainProgram_elsedoneblock411
+MainProgram_elseblock408
+MainProgram_elsedoneblock409
 	; Binary clause Simplified: EQUALS
 	lda jdir
 	; Compare with pure num / var optimization
 	cmp #$0;keep
-	bne MainProgram_elseblock416
-MainProgram_ConditionalTrueBlock415
+	bne MainProgram_elseblock414
+MainProgram_ConditionalTrueBlock413
 	; Assigning single variable : y
 	; Optimizer: a = a +/- b
 	lda y
 	sec
 	sbc #2
 	sta y
-	jmp MainProgram_elsedoneblock417
-MainProgram_elseblock416
+	jmp MainProgram_elsedoneblock415
+MainProgram_elseblock414
 	; Assigning single variable : y
 	; Optimizer: a = a +/- b
 	lda y
 	clc
 	adc #2
 	sta y
-MainProgram_elsedoneblock417
+MainProgram_elsedoneblock415
 	; Binary clause Simplified: LESS
 	lda y
 	; Compare with pure num / var optimization
 	cmp #$6e;keep
-	bcs MainProgram_elsedoneblock424
-MainProgram_ConditionalTrueBlock422
+	bcs MainProgram_elsedoneblock422
+MainProgram_ConditionalTrueBlock420
 	; Assigning single variable : jdir
 	lda #1
 	sta jdir
-MainProgram_elseblock423
-MainProgram_elsedoneblock424
+MainProgram_elseblock421
+MainProgram_elsedoneblock422
 	; Binary clause Simplified: EQUALS
 	lda y
 	; Compare with pure num / var optimization
 	cmp #$9c;keep
-	bne MainProgram_elsedoneblock430
-MainProgram_ConditionalTrueBlock428
+	bne MainProgram_elsedoneblock428
+MainProgram_ConditionalTrueBlock426
 	; Assigning single variable : jdir
 	lda #0
 	sta jdir
 	; Assigning single variable : state
 	sta state
-MainProgram_elseblock429
-MainProgram_elsedoneblock430
+MainProgram_elseblock427
+MainProgram_elsedoneblock428
 	; Assigning single variable : drawTree
 	; Store Variable simplified optimization : right-hand term is pure
 	ldx #0 ; optimized, look out for bugs
 	lda #1
 	sta drawTree,x
-	jmp MainProgram_caseend379
-MainProgram_casenext400
-MainProgram_caseend379
+	jmp MainProgram_caseend377
+MainProgram_casenext398
+MainProgram_caseend377
 	
 ; // make buggy stay inside limits			
 	jsr limit_x
@@ -2818,8 +2809,8 @@ MainProgram_caseend379
 	lda yoff
 	sta wr_y_off
 	jsr jumpsuspend
-MainProgram_elseblock314
-MainProgram_elsedoneblock315
+MainProgram_elseblock312
+MainProgram_elsedoneblock313
 	; Binary clause Simplified: EQUALS
 	; Load Byte array
 	ldx #$1
@@ -2827,8 +2818,8 @@ MainProgram_elsedoneblock315
 	
 	; Compare with pure num / var optimization
 	cmp #$0;keep
-	bne MainProgram_elsedoneblock436
-MainProgram_ConditionalTrueBlock434
+	bne MainProgram_elsedoneblock434
+MainProgram_ConditionalTrueBlock432
 	
 ; // Set up next ground tile when IRQ says ground needs new
 ; // tile
@@ -2850,18 +2841,18 @@ MainProgram_ConditionalTrueBlock434
 	; Compare with pure num / var optimization
 	cmp #$7;keep
 	; BC done
-	bne MainProgram_tempfail455
-MainProgram_binaryclausesuccess457
-	jmp MainProgram_ConditionalTrueBlock451
-MainProgram_tempfail455
+	bne MainProgram_tempfail453
+MainProgram_binaryclausesuccess455
+	jmp MainProgram_ConditionalTrueBlock449
+MainProgram_tempfail453
 	; Binary clause: EQUALS
 	lda updowntile
 	; Compare with pure num / var optimization
 	cmp #$0;keep
 	; BC done
-	bne MainProgram_elseblock452
-MainProgram_binaryclausesuccess459
-MainProgram_ConditionalTrueBlock451
+	bne MainProgram_elseblock450
+MainProgram_binaryclausesuccess457
+MainProgram_ConditionalTrueBlock449
 	; Assigning single variable : updowndir
 	; 8 bit binop
 	; Add/sub where right value is constant number
@@ -2870,10 +2861,10 @@ MainProgram_ConditionalTrueBlock451
 	 ; end add / sub var with constant
 	
 	sta updowndir
-MainProgram_elseblock452
-MainProgram_elsedoneblock453
-MainProgram_elseblock435
-MainProgram_elsedoneblock436
+MainProgram_elseblock450
+MainProgram_elsedoneblock451
+MainProgram_elseblock433
+MainProgram_elsedoneblock434
 	; Full binary clause
 	; Binary clause: EQUALS
 	; Load Byte array
@@ -2883,17 +2874,17 @@ MainProgram_elsedoneblock436
 	; Compare with pure num / var optimization
 	cmp #$0;keep
 	; BC done
-	bne MainProgram_binaryclausefailed478
-MainProgram_binaryclausesuccess480
+	bne MainProgram_binaryclausefailed476
+MainProgram_binaryclausesuccess478
 	lda #1; success
-	jmp MainProgram_binaryclausefinished479
-MainProgram_binaryclausefailed478
+	jmp MainProgram_binaryclausefinished477
+MainProgram_binaryclausefailed476
 	lda #0 ; failed state
-MainProgram_binaryclausefinished479
+MainProgram_binaryclausefinished477
 	cmp #1
-	beq MainProgram_ConditionalTrueBlock462
-	jmp MainProgram_elsedoneblock464
-MainProgram_ConditionalTrueBlock462
+	beq MainProgram_ConditionalTrueBlock460
+	jmp MainProgram_elsedoneblock462
+MainProgram_ConditionalTrueBlock460
 	
 ; // Set up next upper level tile when IRQ says ground needs new
 ; // tile
@@ -2910,18 +2901,18 @@ MainProgram_ConditionalTrueBlock462
 	; Compare with pure num / var optimization
 	cmp #$7;keep
 	; BC done
-	bne MainProgram_tempfail487
-MainProgram_binaryclausesuccess489
-	jmp MainProgram_ConditionalTrueBlock483
-MainProgram_tempfail487
+	bne MainProgram_tempfail485
+MainProgram_binaryclausesuccess487
+	jmp MainProgram_ConditionalTrueBlock481
+MainProgram_tempfail485
 	; Binary clause: EQUALS
 	lda uppertile
 	; Compare with pure num / var optimization
 	cmp #$0;keep
 	; BC done
-	bne MainProgram_elseblock484
-MainProgram_binaryclausesuccess491
-MainProgram_ConditionalTrueBlock483
+	bne MainProgram_elseblock482
+MainProgram_binaryclausesuccess489
+MainProgram_ConditionalTrueBlock481
 	; Assigning single variable : upperdir
 	; 8 bit binop
 	; Add/sub where right value is constant number
@@ -2930,8 +2921,8 @@ MainProgram_ConditionalTrueBlock483
 	 ; end add / sub var with constant
 	
 	sta upperdir
-MainProgram_elseblock484
-MainProgram_elsedoneblock485
+MainProgram_elseblock482
+MainProgram_elsedoneblock483
 	; ----------
 	; BcdAdd address, address, number
 	sed
@@ -2959,7 +2950,7 @@ MainProgram_elsedoneblock485
 	sta vbmY ; y position in pixels
 	lda #$02 ; BCD array - highest byte (in reverse order)
 	sta vbmT
-MainProgram_vbmDrawSBCDloop493
+MainProgram_vbmDrawSBCDloop491
 	ldx vbmT
 	lda score,x
 	pha
@@ -2974,19 +2965,19 @@ MainProgram_vbmDrawSBCDloop493
 	sta vbmI ; digit to display
 	jsr vbmDrawSmallBCDDigit
 	dec vbmT
-	bpl MainProgram_vbmDrawSBCDloop493 ; loop until all bytes displayed
+	bpl MainProgram_vbmDrawSBCDloop491 ; loop until all bytes displayed
 	; Assigning single variable : drawTree
 	; Store Variable simplified optimization : right-hand term is pure
 	ldx #2 ; optimized, look out for bugs
 	lda #1
 	sta drawTree,x
-MainProgram_elseblock463
-MainProgram_elsedoneblock464
-	jmp MainProgram_while121
-MainProgram_elseblock123
-MainProgram_elsedoneblock124
+MainProgram_elseblock461
+MainProgram_elsedoneblock462
+	jmp MainProgram_while119
+MainProgram_elseblock121
+MainProgram_elsedoneblock122
 EndSymbol
-EndBlock216
+EndBlock354
 	org $3200
 carSprite
 	incbin "/Users/jartza/src/coldwar///export/sprite_carbody.bin"
