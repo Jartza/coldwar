@@ -2979,7 +2979,7 @@ MainProgram_elsedoneblock462
 MainProgram_elseblock121
 MainProgram_elsedoneblock122
 EndSymbol
-EndBlock6919
+EndBlock7471
 	org $3000
 carSprite
 	incbin "/Users/jartza/src/coldwar///export/sprite_carbody.bin"

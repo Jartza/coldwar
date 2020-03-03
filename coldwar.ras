@@ -33,7 +33,7 @@ var
 	upperLevel: incbin("export/sprite_upperlevel.bin", addrUpper);
 	
 	// Import music. Made with Fisichella, song by Jojeli
-	musicData: incbin("export/imono.bin", @addrMusic);
+	musicData: incbin("export/imono.bin", addrMusic);
 
 	@startblock $2000 "game"
 	
