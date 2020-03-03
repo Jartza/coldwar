@@ -1,6 +1,7 @@
 Procedure musicplayer(setstate:byte);
 begin
 	case setstate of
+		0: asm("    jmp MUSICPLAY");
 		1: asm("	jmp L1D9C");
 		2: asm("	jmp L1DDD");
 	end;
@@ -8,10 +9,11 @@ begin
 	// Music player originally from Fisichella by Aleksi Eeben.
 	// Player disassembled with da65 and modified to be suitable with TRSE + VBM.
 	asm("
+MUSICPLAY
         dec     $03EC
         beq     L1C2F
 L1C0B
-	    lda     #$0A
+        lda     #$0A
         sta     $3D
         ldx     #$00
         jsr     L1D1A
