@@ -9,16 +9,16 @@ ColdWar
  ; Temp vars section
  ; Temp vars section ends
 	org $2000
-carbody_L	dc.w $03200, $03218, $03230, $03248
-carbody_M	dc.w $03208, $03220, $03238, $03250
-carbody_R	dc.w $03210, $03228, $03240, $03258
-ground_T	dc.w $032a0, $032a8
-updown_T	dc.w $032b0, $032b8, $032c0, $032c8, $032d0, $032d8, $032e0, $032e8
+carbody_L	dc.w $03000, $03018, $03030, $03048
+carbody_M	dc.w $03008, $03020, $03038, $03050
+carbody_R	dc.w $03010, $03028, $03040, $03058
+ground_T	dc.w $030a0, $030a8
+updown_T	dc.w $030b0, $030b8, $030c0, $030c8, $030d0, $030d8, $030e0, $030e8
 	dc.w 
-upper_T	dc.w $034f0, $034f8, $03500, $03508, $03510, $03518, $03520, $03528
+upper_T	dc.w $032f0, $032f8, $03300, $03308, $03310, $03318, $03320, $03328
 	dc.w 
-wheel_L	dc.w $03260, $03270, $03280, $03290
-wheel_R	dc.w $03268, $03278, $03288, $03298
+wheel_L	dc.w $03060, $03070, $03080, $03090
+wheel_R	dc.w $03068, $03078, $03088, $03098
 drawTree	dc.b $00, $00, $00
 suspension	dc.b $00, $00, $09c
 sus_y	dc.b	$00
@@ -2942,9 +2942,9 @@ MainProgram_elsedoneblock483
 	; ----------
 	; VBM DrawSBCD BCD array, Font, X, Y, number of BCD bytes
 	; Font characters to use:
-	lda #<$3470
+	lda #<$3270
 	sta $82
-	lda #>$3470
+	lda #>$3270
 	sta $82+1
 	lda #6
 	sta vbmX ; x position
@@ -2979,23 +2979,23 @@ MainProgram_elsedoneblock462
 MainProgram_elseblock121
 MainProgram_elsedoneblock122
 EndSymbol
-EndBlock6505
-	org $3200
+EndBlock6919
+	org $3000
 carSprite
 	incbin "/Users/jartza/src/coldwar///export/sprite_carbody.bin"
-	org $3260
+	org $3060
 wheelSprite
 	incbin "/Users/jartza/src/coldwar///export/sprite_wheel.bin"
-	org $32a0
+	org $30a0
 groundTile
 	incbin "/Users/jartza/src/coldwar///export/sprite_ground.bin"
-	org $32b0
+	org $30b0
 updownTile
 	incbin "/Users/jartza/src/coldwar///export/sprite_updown.bin"
-	org $32f0
+	org $30f0
 smallFont
 	incbin "/Users/jartza/src/coldwar///export/font4x8.bin"
-	org $34f0
+	org $32f0
 upperLevel
 	incbin "/Users/jartza/src/coldwar///export/sprite_upperlevel.bin"
 	org $3600

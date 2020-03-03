@@ -256,11 +256,11 @@ al  $2f9b .MainProgram_elseblock482
 al  $2fcd .MainProgram_vbmDrawSBCDloop491
 al  $2fef .MainProgram_elseblock461
 al  $2ff2 .MainProgram_elseblock121
-al  $3200 .carSprite
-al  $3260 .wheelSprite
-al  $32a0 .groundTile
-al  $32b0 .updownTile
-al  $32f0 .smallFont
-al  $34f0 .upperLevel
+al  $3000 .carSprite
+al  $3060 .wheelSprite
+al  $30a0 .groundTile
+al  $30b0 .updownTile
+al  $30f0 .smallFont
+al  $32f0 .upperLevel
 al  $3600 .musicData
 ; breakpoints

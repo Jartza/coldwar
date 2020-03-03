@@ -14,7 +14,7 @@ var
 
 	// Memory addresses for sprites & tiles
 	const addrMusic:	address = $3600;
-	const addrCarBody:	address = $3200;
+	const addrCarBody:	address = $3000;
 	const addrWheel:	address = addrCarBody + 96;
 	const addrGround:	address = addrWheel + 64;
 	const addrUpdown:	address = addrGround + 16;
