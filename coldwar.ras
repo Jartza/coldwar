@@ -4,12 +4,12 @@ var
 	@userdata $1000 $1FFF "Bitmap"
 
 	// Export sprites, tiles and font from FLUFF files (creates .bin files)
-	@vbmexport	"res/sprites/sprites.flf" 	"export/sprite_carbody.bin"		0 	12	1	1
-	@vbmexport	"res/sprites/sprites.flf" 	"export/sprite_wheel.bin"  		80 	88	1	1
-	@vbmexport	"res/sprites/sprites.flf" 	"export/sprite_ground.bin" 		160	162	1	1
-	@vbmexport	"res/sprites/sprites.flf" 	"export/sprite_updown.bin" 		120	128	1	1
-	@vbmexport	"res/sprites/sprites.flf" 	"export/sprite_upperlevel.bin" 	360	368	1	1
-	@export		"res/char/font4x8.flf" 		"export/font4x8.bin" 			0 	64
+	@vbmexport	"res/sprites/sprites.flf" 	"export/sprite_carbody.bin"    0 	12	1	1
+	@vbmexport	"res/sprites/sprites.flf" 	"export/sprite_wheel.bin"      80 	88	1	1
+	@vbmexport	"res/sprites/sprites.flf" 	"export/sprite_ground.bin"     160	162	1	1
+	@vbmexport	"res/sprites/sprites.flf" 	"export/sprite_updown.bin"     120	128	1	1
+	@vbmexport	"res/sprites/sprites.flf" 	"export/sprite_upperlevel.bin" 360	368	1	1
+	@export		"res/char/font4x8.flf" 		"export/font4x8.bin"           0 	64
 
 	// Memory addresses for sprites & tiles
 	const addrCarBody:	address = $3200;
