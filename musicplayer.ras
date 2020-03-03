@@ -29,7 +29,7 @@ L1C0B
         rts
 
 L1C2F   
-		lda     $03ED
+        lda     $03ED
         sta     $03EC
         lda     $03EA
         cmp     #$FF
