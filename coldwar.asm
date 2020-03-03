@@ -53,19 +53,14 @@ updowntile	dc.b	$00
 updowndir	dc.b	$01
 uppertile	dc.b	$00
 upperdir	dc.b	$01
-message	
-	dc.b	$03, $0f, $0c, $04, $20, $17, $01, $12, $20
-	dc.b	$2d, $20, $0c, $09, $14, $14, $0c, $05, $20
-	dc.b	$02, $15, $07, $07, $19, $20, $07, $01, $0d
-	dc.b	$05, 0
 scoretitle	
 	dc.b	$13, $03, $0f, $12, $05, $3a, 0
 score	dc.b $00, $00, $00
 scoreadd	dc.b $01, $00, $00
-mp1 = $35
-mp2 = $36
-mp3 = $37
-mp4 = $38
+fis1 = $36
+fis2 = $37
+fis3 = $38
+fis4 = $39
 	
 	
 	; ***********  Defining procedure : init16x8mul
@@ -1324,11 +1319,12 @@ initrandom256_RandomSkip5
 ; // Used for y offset calculations
 ; // Jump direction
 ; // Some misc stuff, probably to be removed later
-; // Include music player variables and player code itself
+; // Include music player code
 ; //
-; // Music player variables in zero page
+; // Fisichella player zero page variables
 ; //
-; // Music player buffer in tape buffer
+; // Fisichella player variables in tape buffer.
+; // Not reserved (hardcoded in asm), just displayed here for reminder
 ; //
 	
 	
@@ -1364,16 +1360,16 @@ MUSICPLAY
         beq     L1C2F
 L1C0B
         lda     #$0A
-        sta     $3D
+        sta     fis3
         ldx     #$00
         jsr     L1D1A
-        inc     $3D
+        inc     fis3
         ldx     #$04
         jsr     L1D1A
-        inc     $3D
+        inc     fis3
         ldx     #$08
         jsr     L1D1A
-        inc     $3D
+        inc     fis3
         ldx     #$0C
         jsr     L1D1A
         lda     $03EF
@@ -1422,35 +1418,35 @@ L1C84
         rts
 L1C8A
         lda     #$80
-        sta     $3B
+        sta     fis1
         lda     #$37
-        sta     $3C
+        sta     fis2
         ldy     $03EF
 L1C95
-        lda     ($3B),y
+        lda     (fis1),y
         ror
         ror
         ror
         ror
         and     #$0F
-        sta     $3D
-        lda     ($3B),y
+        sta     fis3
+        lda     (fis1),y
         and     #$0F
         beq     L1CB7
         sta     $03EE
         lda     $900E
         and     #$F0
-        ora     $3D
+        ora     fis3
         sta     $900E
         iny
         sty     $03EF
         rts
 L1CB7
-        lda     $3D
+        lda     fis3
         beq     L1CC9
         lda     $03EF
         and     #$F0
-        ora     $3D
+        ora     fis3
         sta     $03EF
         tay
         jmp     L1C95
@@ -1461,29 +1457,29 @@ L1CCD
         ldy     $03EB
         lda     $03F0,x
         bmi     L1CE5
-        sta     $3D
+        sta     fis3
         and     #$70
         ora     #$80
-        sta     $3B
+        sta     fis1
         lda     #>musicData
-        sta     $3C
-        lda     ($3B),y
+        sta     fis2
+        lda     (fis1),y
         bne     L1CE6
 L1CE5
         rts
 L1CE6
         and     #$1F
-        sta     $3E
-        lda     $3D
+        sta     fis4
+        lda     fis3
         and     #$0F
         sec
         sbc     #$08
         clc
-        adc     $3E
+        adc     fis4
         sta     $03F1,x
         lda     #$01
         sta     $03F2,x
-        lda     ($3B),y
+        lda     (fis1),y
         ror
         and     #$70
         sta     $03F3,x
@@ -1509,7 +1505,7 @@ L1D1A
         beq     L1D32
         rts
 L1D27
-        ldy     $3D
+        ldy     fis3
         sta     $9000,y
         lda     #$FF
         sta     $03F3,x
@@ -1517,7 +1513,7 @@ L1D31
         rts
 L1D32
         lda     $03F3,x
-        sta     $3B
+        sta     fis1
         ror
         ror
         ror
@@ -1528,19 +1524,19 @@ L1D32
         sta     $03F2,x
 L1D44
         lda     #>musicData+1
-        sta     $3C
+        sta     fis2
         ldy     #$00
-        lda     ($3B),y
+        lda     (fis1),y
         beq     L1D27
         cmp     #$10
         bcc     L1D8A
         and     #$1F
         clc
         adc     #$10
-        sta     $3E
+        sta     fis4
         lda     $03F1,x
         clc
-        adc     $3E
+        adc     fis4
         tay
         cpy     #$40
         bcc     L1D66
@@ -1551,9 +1547,9 @@ L1D66
         ldy     #$00
 L1D6C
         lda     musicData+448,y
-        sta     $3E
+        sta     fis4
         ldy     #$00
-        lda     ($3B),y
+        lda     (fis1),y
         rol
         rol
         rol
@@ -1562,18 +1558,18 @@ L1D6C
         sec
         sbc     #$04
         clc
-        adc     $3E
-        ldy     $3D
+        adc     fis4
+        ldy     fis3
         sta     $9000,y
         inc     $03F3,x
         rts
 L1D8A
         and     #$0F
-        sta     $3E
-        lda     $3B
+        sta     fis4
+        lda     fis1
         and     #$F0
-        ora     $3E
-        sta     $3B
+        ora     fis4
+        sta     fis1
         sta     $03F3,x
         jmp     L1D44
 L1D9C
@@ -2983,7 +2979,7 @@ MainProgram_elsedoneblock462
 MainProgram_elseblock121
 MainProgram_elsedoneblock122
 EndSymbol
-EndBlock2424
+EndBlock6505
 	org $3200
 carSprite
 	incbin "/Users/jartza/src/coldwar///export/sprite_carbody.bin"
