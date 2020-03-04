@@ -241,7 +241,7 @@ L1D8A
 
 L1D9C
         jsr     L1DDD
-        lda     #$07		; EOF ?
+        lda     #$06		; EOF ?
         sta     $03ED
         lda     #$01
         sta     $03EC

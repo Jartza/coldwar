@@ -262,5 +262,5 @@ al  $30a0 .groundTile
 al  $30b0 .updownTile
 al  $30f0 .smallFont
 al  $32f0 .upperLevel
-al  $3700 .musicData
+al  $3600 .musicData
 ; breakpoints
