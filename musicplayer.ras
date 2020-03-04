@@ -1,15 +1,17 @@
 Procedure musicplayer(musicState:byte);
 begin
 	case musicState of
-		0: asm("    jmp MUSICPLAY"); // Called in raster IRQ. Faster way: asm("    jsr MUSICPLAY");
-		1: asm("    jmp L1D9C"); // Initialize player
-		2: asm("    jmp L1DDD"); // Stop (and rewind)
+		0: asm("    jmp MusicPlay"); // Called in raster IRQ. Faster way: asm("    jsr MusicPlay");
+		1: asm("    jmp MusicInit"); // Initialize player
+		2: asm("    jmp MusicStop"); // Stop (and rewind)
 	end;
 	
 	// Music player originally from Fisichella by Aleksi Eeben.
 	// Player disassembled with da65 and modified to be suitable with TRSE + VBM.
 	asm("
-MUSICPLAY
+		MusicSpeed = 6	
+
+MusicPlay
         dec     $03EC
         beq     L1C2F
 L1C0B
@@ -240,9 +242,9 @@ L1D8A
         sta     $03F3,x
         jmp     L1D44
 
-L1D9C
-        jsr     L1DDD
-        lda     #$06		; SPEED
+MusicInit
+        jsr     MusicStop
+        lda     #MusicSpeed
         sta     $03ED
         lda     #$01
         sta     $03EC
@@ -266,7 +268,7 @@ L1DCA
         lda     musicData+3,y
         sta     $03FC
         rts
-L1DDD
+MusicStop
         lda     #$00
         ldy     #$15
 L1DE1
