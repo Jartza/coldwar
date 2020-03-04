@@ -1,9 +1,9 @@
 ; labels
 al  $1210 .ColdWar
 al  $2008 .carbody_M
-al  $2000 .carbody_L
 al  $2018 .ground_T
 al  $201c .updown_T
+al  $2000 .carbody_L
 al  $2010 .carbody_R
 al  $202e .upper_T
 al  $2040 .wheel_L
@@ -262,5 +262,5 @@ al  $30a0 .groundTile
 al  $30b0 .updownTile
 al  $30f0 .smallFont
 al  $32f0 .upperLevel
-al  $3600 .musicData
+al  $3700 .musicData
 ; breakpoints

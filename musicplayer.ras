@@ -76,7 +76,7 @@ L1C84
 L1C8A
         lda     #$80
         sta     fis1
-        lda     #$37
+        lda     #>musicData+1
         sta     fis2
         ldy     $03EF
 L1C95
@@ -241,7 +241,7 @@ L1D8A
 
 L1D9C
         jsr     L1DDD
-        lda     #$06
+        lda     #$07		; EOF ?
         sta     $03ED
         lda     #$01
         sta     $03EC

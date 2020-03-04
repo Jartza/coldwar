@@ -1324,7 +1324,7 @@ initrandom256_RandomSkip5
 ; // Fisichella player zero page variables
 ; //
 ; // Fisichella player variables in tape buffer.
-; // Not reserved (hardcoded in asm), just displayed here for reminder
+; // Not reserved here (hardcoded in asm), just shown as a reminder
 ; //
 	
 	
@@ -1419,7 +1419,7 @@ L1C84
 L1C8A
         lda     #$80
         sta     fis1
-        lda     #$37
+        lda     #>musicData+1
         sta     fis2
         ldy     $03EF
 L1C95
@@ -1574,7 +1574,7 @@ L1D8A
         jmp     L1D44
 L1D9C
         jsr     L1DDD
-        lda     #$06
+        lda     #$07		; EOF ?
         sta     $03ED
         lda     #$01
         sta     $03EC
@@ -2979,7 +2979,7 @@ MainProgram_elsedoneblock462
 MainProgram_elseblock121
 MainProgram_elsedoneblock122
 EndSymbol
-EndBlock7471
+EndBlock7678
 	org $3000
 carSprite
 	incbin "/Users/jartza/src/coldwar///export/sprite_carbody.bin"
@@ -2998,6 +2998,6 @@ smallFont
 	org $32f0
 upperLevel
 	incbin "/Users/jartza/src/coldwar///export/sprite_upperlevel.bin"
-	org $3600
+	org $3700
 musicData
 	incbin "/Users/jartza/src/coldwar///export/imono.bin"
