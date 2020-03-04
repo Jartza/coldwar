@@ -1574,7 +1574,7 @@ L1D8A
         jmp     L1D44
 L1D9C
         jsr     L1DDD
-        lda     #$06		; EOF ?
+        lda     #$05		; SPEED ?
         sta     $03ED
         lda     #$01
         sta     $03EC
@@ -2979,7 +2979,7 @@ MainProgram_elsedoneblock462
 MainProgram_elseblock121
 MainProgram_elsedoneblock122
 EndSymbol
-EndBlock7885
+EndBlock8092
 	org $3000
 carSprite
 	incbin "/Users/jartza/src/coldwar///export/sprite_carbody.bin"
@@ -2998,6 +2998,6 @@ smallFont
 	org $32f0
 upperLevel
 	incbin "/Users/jartza/src/coldwar///export/sprite_upperlevel.bin"
-	org $3600
+	org $3400
 musicData
 	incbin "/Users/jartza/src/coldwar///export/imono.bin"
