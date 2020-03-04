@@ -1,8 +1,9 @@
-Procedure musicplayer(setstate:byte);
+Procedure musicplayer(musicState:byte);
 begin
-	case setstate of
-		1: asm("    jmp L1D9C");
-		2: asm("    jmp L1DDD");
+	case musicState of
+		0: asm("    jmp MUSICPLAY"); // Called in raster IRQ. Faster way: asm("    jsr MUSICPLAY");
+		1: asm("    jmp L1D9C"); // Initialize player
+		2: asm("    jmp L1DDD"); // Stop (and rewind)
 	end;
 	
 	// Music player originally from Fisichella by Aleksi Eeben.
