@@ -18,7 +18,7 @@ var
 
 
 	// Memory addresses for sprites & tiles
-	const addrMusic:	address = $3c00;
+	const addrMusic:	address = $be00;
 	const addrCarBody:	address = $3800;
 	const addrWheel:	address = addrCarBody + 96;
 	const addrGround:	address = addrWheel + 64;
@@ -239,19 +239,20 @@ begin
 	for i := 0 to 8 do if (vbmTestPixel2(bx+xoffset, 175+i) = 0) then yoff := i;
 end;
 
-@startblock $a000 "Block5"
 
 // This procedure is never actually called in the code, 
 // it contains the "cartridge autostart signature" and jump
 // address. block1 equals to main. 
+@startblock $a000 "Block5"
 procedure cartAutostart();
 begin
 	asm("
-	dc.b <block1,>block1
-	dc.b <block1,>block1
-	dc.b $41,$30,$c3,$c2,$cd
+	dc.b <block1,>block1		// Cart reset address
+	dc.b <block1,>block1		// Restore keypress address
+	dc.b $41,$30,$c3,$c2,$cd	// "Magic" signature for cart autostart ("a0CBM")
 	");
 end;
+@endblock
 
 // Main body, handle all initialization and
 // game logic and joystick controls.
@@ -388,4 +389,3 @@ begin
 	end;
 
 end.
-@endblock
