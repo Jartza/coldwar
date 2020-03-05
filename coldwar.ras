@@ -19,12 +19,13 @@ var
 
 	// Memory addresses for sprites & tiles
 	const addrMusic:	address = $be00;
-	const addrCarBody:	address = $3800;
+	const addrCarBody:	address = $ba00;
 	const addrWheel:	address = addrCarBody + 96;
 	const addrGround:	address = addrWheel + 64;
 	const addrUpdown:	address = addrGround + 16;
 	const addrFont:		address = addrUpdown + 64;
 	const addrUpper:	address = addrFont + 512;
+	const addrLetters:	address = addrUpper + 64;
 
 	// Virtual
 	const addrNumbers:	address = addrFont + 384;
@@ -36,6 +37,7 @@ var
 	updownTile: incbin("export/sprite_updown.bin", addrUpdown);
 	smallFont: incbin("export/font4x8.bin", addrFont);
 	upperLevel: incbin("export/sprite_upperlevel.bin", addrUpper);
+	letterSprite: incbin("export/sprite_letters.bin", addrLetters);
 	
 	// Import music data. Made with Fisichella, song by Jojeli
 	musicData: incbin("export/imono.bin", addrMusic);
@@ -102,6 +104,20 @@ var
 // External procedures
 @include "musicplayer.ras"
 @include "initvars.ras"
+
+// This procedure is never actually called in the code, 
+// it contains the "cartridge autostart signature" and jump
+// address. block1 equals to main. 
+@startblock $a000 "Block5"
+procedure cartAutostart();
+begin
+	asm("
+	dc.b <block1,>block1       ; Cart reset address
+	dc.b <block1,>block1       ; Restore keypress address
+	dc.b $41,$30,$c3,$c2,$cd   ; Signature for cart autostart (a0CBM)
+	");
+end;
+@endblock
 
 // Interrupt function that handles all the screen drawing
 // starting from certain raster line to avoid flicker
@@ -239,20 +255,6 @@ begin
 	for i := 0 to 8 do if (vbmTestPixel2(bx+xoffset, 175+i) = 0) then yoff := i;
 end;
 
-
-// This procedure is never actually called in the code, 
-// it contains the "cartridge autostart signature" and jump
-// address. block1 equals to main. 
-@startblock $a000 "Block5"
-procedure cartAutostart();
-begin
-	asm("
-	dc.b <block1,>block1       ; Cart reset address
-	dc.b <block1,>block1       ; Restore keypress address
-	dc.b $41,$30,$c3,$c2,$cd   ; Signature for cart autostart (a0CBM)
-	");
-end;
-@endblock
 
 // Main body, handle all initialization and
 // game logic and joystick controls.
