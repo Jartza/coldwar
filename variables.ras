@@ -1,0 +1,88 @@
+	// Fisichella player zero page variables
+	//
+	fis1 : byte at $36;
+	fis2 : byte at $37;
+	fis3 : byte at $38;
+	fis4 : byte at $39;  
+
+	// Drawtree array which handles what to redraw
+	drawTree: array[3] of byte at $033c;
+
+	// Suspension "ring buffer"
+	suspension: array[3] of byte at $033f;
+
+    score: array[] of byte at $0342;
+
+    // Can be in ROM
+    scoreadd: array[] of byte = ($01, $00, $00);
+
+	// Suspension buffer vars
+	sus_y: byte at $3d;
+	sus_wy: byte at $3f;
+
+
+	// Global variables for all the game logic
+	scnt: byte at $40;
+	gcnt: byte at $41;
+	mcnt: byte at $42;
+	bcnt: byte at $43;
+	ucnt: byte at $44;
+	uscnt: byte at $45;
+	
+	// Buggy body coordinates, pretty
+	// straightforward x and y and y offset
+	bx: byte at $46;
+	by: byte at $47;
+	y_off: byte at $48;
+	
+	// Buggy wheels coordinates,
+	// y coordinate and offset for each wheel.
+	// x is calculated from body
+	wh_y: byte at $49;        // generic wheel y coordinate
+	wr_y_off: byte at $4a;    // right wheel y offset
+	wl_y_off: byte at $4b;    // left wheel y offset
+
+	// Storage space for old coordinates,
+	// which are used to clear old graphics before
+	// drawing new one
+	old_x: byte at $4c;
+	old_y: byte at $4d;
+	old_y_off: byte at $4e;
+	old_wh_y: byte at $4f;
+	old_wr_y_off: byte at $50;		// old right wheel y offset
+	old_wl_y_off: byte at $51;		// old left wheel y offset
+
+	// Loop and temp variables, 
+	// t used inside IRQ, i used outside IRQ
+	i: byte at $52;
+	t: byte at $53;
+
+	// x direction during jump
+	xdir: byte at $54;
+
+	// Game main loop state-machine state
+	state: byte at $55;
+
+	// Generic pointer, used for tile drawing
+	p1: pointer;
+
+	// Used for y offset calculations
+	yoff: byte at $56;
+
+	// Jump direction
+	jdir: byte at $57;
+
+	// Some misc stuff, probably to be removed later
+	grndtile: byte at $58;
+	updowntile: byte at $59;
+	updowndir: byte at $5a;
+	uppertile: byte at $5b;
+	upperdir: byte at $5c;
+	
+	// Can be in ROM
+    scoretitle: cstring = ("SCORE:");
+
+	// Fisichella player variables in tape buffer.
+	// Not reserved (hardcoded in asm), just shown as a reminder
+	//
+	@userdata $03E0 $03FF "Fisichella buf"
