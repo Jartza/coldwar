@@ -82,4 +82,4 @@
 	// Fisichella player variables in tape buffer.
 	// Not reserved (hardcoded in asm), just shown as a reminder
 	//
-	@userdata $03E0 $03FF "Fisichella buf"
+	@userdata $03E0 $03FF "Fisichella buffers"

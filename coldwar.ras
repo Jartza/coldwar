@@ -1,7 +1,7 @@
 program ColdWar;
 var
 	// Address of bitmap (screen and characters)
-	@userdata $1000 $1FFF "Bitmap"
+	@userdata $1000 $1FFF "VBM Bitmap"
 
 	// Export sprites, tiles and font from FLUFF files (creates .bin files)
 	@vbmexport	"res/sprites/sprites.flf" 	"export/sprite_carbody.bin"    0 	12	1	1
@@ -107,16 +107,18 @@ var
 
 // This procedure is never actually called in the code, 
 // it contains the "cartridge autostart signature" and jump
-// address. block1 equals to main. 
+// address. block1 equals to main. This needs to be exactly
+// in address $a000 for it to work.
 @startblock $a000 "Block5"
 procedure cartAutostart();
 begin
 	asm("
-	dc.b <block1,>block1       ; Cart reset address
-	dc.b <block1,>block1       ; Restore keypress address
-	dc.b $41,$30,$c3,$c2,$cd   ; Signature for cart autostart (a0CBM)
+	dc.b <block1,>block1        ; Cart reset start address
+	dc.b $00,$00                ; Restore keypress address (ignored)
+	dc.b $41,$30,$c3,$c2,$cd    ; Signature for cart autostart (a0CBM)
 	");
 end;
+
 @endblock
 
 // Interrupt function that handles all the screen drawing
@@ -261,11 +263,12 @@ end;
 begin
 	// Initialize system when run as cartridge
 	asm("
-	jsr $FD8D
-	jsr $FD52
-	jsr $FDF9
-	jsr $E518
-	cli
+		;Run kernal setup routines.
+		jsr $FD8D
+		jsr $FD52
+		jsr $FDF9
+		jsr $E518
+		cli
 	");
 
 	// Init variables
