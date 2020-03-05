@@ -12,9 +12,14 @@ var
 	@vbmexport	"res/sprites/sprites.flf" 	"export/sprite_letters.bin"    400	412	2	1
 	@export		"res/char/font4x8.flf" 		"export/font4x8.bin"           0 	64
 
+	// Create images for eprom burning (for 16kB cartridge)
+	@exportprg2bin "coldwar.prg" "eprom2000.prg" $2000 $4000
+	@exportprg2bin "coldwar.prg" "eproma000.prg" $a000 $c000
+
+
 	// Memory addresses for sprites & tiles
-	const addrMusic:	address = $3400;
-	const addrCarBody:	address = $3000;
+	const addrMusic:	address = $3e00;
+	const addrCarBody:	address = $3a00;
 	const addrWheel:	address = addrCarBody + 96;
 	const addrGround:	address = addrWheel + 64;
 	const addrUpdown:	address = addrGround + 16;
@@ -32,10 +37,8 @@ var
 	smallFont: incbin("export/font4x8.bin", addrFont);
 	upperLevel: incbin("export/sprite_upperlevel.bin", addrUpper);
 	
-	// Import music. Made with Fisichella, song by Jojeli
+	// Import music data. Made with Fisichella, song by Jojeli
 	musicData: incbin("export/imono.bin", addrMusic);
-
-	@startblock $2000 "game"
 	
 	// Pre-shifted address-table for car body sprite
 	carbody_L: array[] of integer = (
@@ -93,87 +96,12 @@ var
 	const x_left:	byte = 1;
 	const x_right:	byte = 2;
 
-	// Drawtree array which handles what to redraw
-	drawTree: array[] of byte = (
-		0, 0, 0
-	);
-	
-	// Suspension "ring buffer"
-	suspension: array[] of byte = (
-		0, 0, 156
-	);
+// Include variables. Defined in zeropage and cassette buffer
+@include "variables.ras"
 
-	// Suspension buffer vars
-	sus_y: byte = 0;
-	sus_wy: byte = 2;
-
-
-	// Global variables for all the game logic
-	scnt: byte = 0;
-	gcnt: byte = 0;
-	mcnt: byte = 0;
-	bcnt: byte = 0;
-	ucnt: byte = 0;
-	uscnt: byte = 0;
-	
-	// Buggy body coordinates, pretty
-	// straightforward x and y and y offset
-	x: byte = 50;
-	y: byte = 156;
-	y_off: byte = 0;
-	
-	// Buggy wheels coordinates,
-	// y coordinate and offset for each wheel.
-	// x is calculated from body
-	wh_y: byte = 156;			// generic wheel y coordinate
-	wr_y_off: byte = 0;			// right wheel y offset
-	wl_y_off: byte = 0;			// left wheel y offset
-
-	// Storage space for old coordinates,
-	// which are used to clear old graphics before
-	// drawing new one
-	old_x: byte = 168;
-	old_y: byte = 156;
-	old_y_off: byte = 0;
-	old_wh_y: byte = 180;
-	old_wr_y_off: byte = 0;		// old right wheel y offset
-	old_wl_y_off: byte = 0;		// old left wheel y offset
-
-	// Loop and temp variables, 
-	// t used inside IRQ, i used outside IRQ
-	i,t: byte = 0;
-
-	// x direction during jump
-	xdir: byte = 0;
-
-	// Game main loop state-machine state
-	state: byte = 0;
-
-	// Generic pointer, used for tile drawing
-	p1: pointer;
-
-	// Used for y offset calculations
-	yoff: byte = 0;
-
-	// Jump direction
-	jdir: byte = 0;
-
-	// Some misc stuff, probably to be removed later
-	grndtile: byte = 0;
-	updowntile: byte = 0;
-	updowndir: byte = 1;
-	uppertile: byte = 0;
-	upperdir: byte = 1;
-    scoretitle: cstring = ("SCORE:");
-    score: array[] of byte = ($00, $00, $00);
-    scoreadd: array[] of byte = ($01, $00, $00);
-
-
-
-	// Include music player code
-	//
-	@include "musicplayervars.ras"
-	@include "musicplayer.ras"
+// External procedures
+@include "musicplayer.ras"
+@include "initvars.ras"
 
 // Interrupt function that handles all the screen drawing
 // starting from certain raster line to avoid flicker
@@ -245,17 +173,17 @@ begin
 
 
 	// Draw new car sprite
-	vbmSetPosition2(x, y + y_off+2);
+	vbmSetPosition2(bx, by + y_off+2);
 	vbmDrawSprite2(carbody_L, carbody_M, carbody_R);
 	
 	// Draw wheels
-	vbmSetPosition2(x, wh_y + wl_y_off + 10);
+	vbmSetPosition2(bx, wh_y + wl_y_off + 10);
 	vbmDrawSprite8E(wheel_L, wheel_R);
-	vbmSetPosition2(x+10, wh_y + wr_y_off + 10);
+	vbmSetPosition2(bx + 10, wh_y + wr_y_off + 10);
 	vbmDrawSprite8E(wheel_L, wheel_R);
 	drawTree[d_car] := 0;
-	old_x := x;
-	old_y := y;
+	old_x := bx;
+	old_y := by;
 	old_y_off := y_off;
 	old_wh_y := wh_y;
 	old_wl_y_off := wl_y_off;
@@ -278,21 +206,21 @@ end;
 // Limit buggy x movement
 procedure limit_x();
 begin
-	if (x < 8) then x := 8;
-	if (x > 120) then x := 120;
+	if (bx < 8) then bx := 8;
+	if (bx > 120) then bx := 120;
 end;
 
 // Move buggy right
-procedure buggy_right(incamount:byte);
+procedure buggy_right(incamount:byte at $3a);
 begin
-	x := x + incamount;
+	bx := bx + incamount;
 	xdir := x_right;
 end;
 
 // Move buggy left
-procedure buggy_left(decamount:byte);
+procedure buggy_left(decamount:byte at $3b);
 begin
-	x := x - decamount;
+	bx := bx - decamount;
 	xdir := x_left;
 end;
 
@@ -300,21 +228,47 @@ end;
 procedure jumpsuspend();
 begin
 	// Suspension
-	suspension[sus_y] := y;
+	suspension[sus_y] := by;
 	wh_y := suspension[sus_wy];
 	incrange(sus_y, 0, 3);
 	incrange(sus_wy, 0, 3);
 end;
 
 // Find ground offset at x+offset
-procedure find_ground(xoffset:byte);
+procedure find_ground(xoffset:byte at $3c);
 begin
-	for i := 0 to 8 do if (vbmTestPixel2(x+xoffset, 175+i) = 0) then yoff := i;
+	for i := 0 to 8 do if (vbmTestPixel2(bx+xoffset, 175+i) = 0) then yoff := i;
+end;
+
+@startblock $a000 "Block5"
+
+// This procedure is never actually called in the code, 
+// it contains the "cartridge autostart signature" and jump
+// address. block1 equals to main. 
+procedure cartAutostart();
+begin
+	asm("
+	dc.b <block1,>block1
+	dc.b <block1,>block1
+	dc.b $41,$30,$c3,$c2,$cd
+	");
 end;
 
 // Main body, handle all initialization and
 // game logic and joystick controls.
 begin
+	// Initialize system when run as cartridge
+	asm("
+	jsr 64909
+	jsr 64850
+	jsr 65017
+	jsr 58648
+	cli
+	");
+
+	// Init variables
+	initVariables();
+
 	// Init music player
 	musicplayer(1);
 
@@ -382,9 +336,9 @@ begin
 					begin
 						if (xdir = x_right) then buggy_right(1);
 						if (xdir = x_left) then buggy_left(1);
-						if (jdir = 0) then y:=y-2 else y:=y+2;
-						if (y < 110) then jdir := 1;
-						if (y = 156) then
+						if (jdir = 0) then by:=by-2 else by:=by+2;
+						if (by < 110) then jdir := 1;
+						if (by = 156) then
 						begin
 							jdir := 0;
 							state := s_stat;
@@ -432,4 +386,6 @@ begin
 		end;
 
 	end;
+
 end.
+@endblock
