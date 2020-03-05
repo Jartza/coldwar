@@ -1,9 +1,6 @@
 	// Fisichella player zero page variables
 	//
-	fis1 : byte at $36;
-	fis2 : byte at $37;
-	fis3 : byte at $38;
-	fis4 : byte at $39;  
+	// fis1 .. fis4 = $36 .. $39
 
 	// Drawtree array which handles what to redraw
 	drawTree: array[3] of byte at $033c;

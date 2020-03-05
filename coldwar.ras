@@ -13,13 +13,13 @@ var
 	@export		"res/char/font4x8.flf" 		"export/font4x8.bin"           0 	64
 
 	// Create images for eprom burning (for 16kB cartridge)
-	@exportprg2bin "coldwar.prg" "eprom2000.prg" $2000 $4000
-	@exportprg2bin "coldwar.prg" "eproma000.prg" $a000 $c000
+	@exportprg2bin "coldwar.prg" "eprom2000.bin" $2000 $4000
+	@exportprg2bin "coldwar.prg" "eproma000.bin" $a000 $c000
 
 
 	// Memory addresses for sprites & tiles
-	const addrMusic:	address = $3e00;
-	const addrCarBody:	address = $3a00;
+	const addrMusic:	address = $3c00;
+	const addrCarBody:	address = $3800;
 	const addrWheel:	address = addrCarBody + 96;
 	const addrGround:	address = addrWheel + 64;
 	const addrUpdown:	address = addrGround + 16;
@@ -109,8 +109,7 @@ var
 procedure drawcar();
 begin
 	// Store the processors registers
-	StartIRQ(0);
-	
+	StartIRQ(0); 	
 	// Play song
 //				screen_bg_color := WHITE + SCREEN_BG_BLACK;
 	asm("    jsr MusicPlay");
@@ -259,10 +258,10 @@ end;
 begin
 	// Initialize system when run as cartridge
 	asm("
-	jsr 64909
-	jsr 64850
-	jsr 65017
-	jsr 58648
+	jsr $FD8D
+	jsr $FD52
+	jsr $FDF9
+	jsr $E518
 	cli
 	");
 
@@ -310,6 +309,7 @@ begin
 	// params: IRQ function, raster line, PAL/NTSC (0/1)
 	DisableVIC20IRQ();
 	VIARasterIRQ(drawcar(), 124, 0);
+
 
 	// Main game logic runs here in loop
 	while(true) offpage do

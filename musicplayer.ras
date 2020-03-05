@@ -1,4 +1,4 @@
-Procedure musicplayer(musicState:byte);
+Procedure musicplayer(musicState:byte at $5d);
 begin
 	case musicState of
 		0: asm("    jmp MusicPlay"); // Called in raster IRQ. Faster way: asm("    jsr MusicPlay");
@@ -9,7 +9,11 @@ begin
 	// Music player originally from Fisichella by Aleksi Eeben.
 	// Player disassembled with da65 and modified to be suitable with TRSE + VBM.
 	asm("
-		MusicSpeed = 6	
+		MusicSpeed = 6
+		fis1 = $36
+		fis2 = $37
+		fis3 = $38
+		fis4 = $39
 
 MusicPlay
         dec     $03EC
