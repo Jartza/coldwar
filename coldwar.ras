@@ -1,5 +1,9 @@
 program ColdWar;
 var
+	// Create images for eprom burning (for 16kB cartridge)
+	@exportprg2bin "coldwar.prg" "eprom2000.bin" $2000 $4000
+	@exportprg2bin "coldwar.prg" "eproma000.bin" $a000 $c000
+
 	// Address of bitmap (screen and characters)
 	@userdata $1000 $1FFF "VBM Bitmap"
 
@@ -11,10 +15,6 @@ var
 	@vbmexport	"res/sprites/sprites.flf" 	"export/sprite_upperlevel.bin" 360	368	1	1
 	@vbmexport	"res/sprites/sprites.flf" 	"export/sprite_letters.bin"    400	412	2	1
 	@export		"res/char/font4x8.flf" 		"export/font4x8.bin"           0 	64
-
-	// Create images for eprom burning (for 16kB cartridge)
-	@exportprg2bin "coldwar.prg" "eprom2000.bin" $2000 $4000
-	@exportprg2bin "coldwar.prg" "eproma000.bin" $a000 $c000
 
 
 	// Memory addresses for sprites & tiles
@@ -113,9 +113,9 @@ var
 procedure cartAutostart();
 begin
 	asm("
-	dc.b <block1,>block1        ; Cart reset start address
-	dc.b $00,$00                ; Restore keypress address (ignored)
-	dc.b $41,$30,$c3,$c2,$cd    ; Signature for cart autostart (a0CBM)
+	dc.b <block1,>block1         ; Cart reset start address
+	dc.b <restoreKey,>restoreKey ; Restore keypress jump address
+	dc.b $41,$30,$c3,$c2,$cd     ; Signature for cart autostart (a0CBM)
 	");
 end;
 
@@ -263,12 +263,22 @@ end;
 begin
 	// Initialize system when run as cartridge
 	asm("
-		;Run kernal setup routines.
+		; Disable interrupts
+		sei
+		; Run kernal setup routines.
 		jsr $FD8D
 		jsr $FD52
 		jsr $FDF9
+restoreKey:
+		; Disable interrupts again (for Restore-key)
+		sei
 		jsr $E518
-		cli
+		; Reset stack pointer
+		ldx #$ff
+		txs
+		; Prevent lower/uppercase swap
+		lda #$80
+		sta $0291
 	");
 
 	// Init variables
