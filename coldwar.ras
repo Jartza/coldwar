@@ -10,9 +10,8 @@ var
 	// Export sprites, tiles and font from FLUFF files (creates .bin files)
 	@vbmexport	"res/sprites/sprites.flf" 	"export/sprite_carbody.bin"    0 	12	1	1
 	@vbmexport	"res/sprites/sprites.flf" 	"export/sprite_wheel.bin"      80 	88	1	1
-	@vbmexport	"res/sprites/sprites.flf" 	"export/sprite_ground.bin"     160	162	1	1
+	@vbmexport	"res/sprites/sprites.flf" 	"export/sprite_ground.bin"     160	163	1	1
 	@vbmexport	"res/sprites/sprites.flf" 	"export/sprite_updown.bin"     120	128	1	1
-	@vbmexport	"res/sprites/sprites.flf" 	"export/sprite_upperlevel.bin" 360	368	1	1
 	@vbmexport	"res/sprites/sprites.flf" 	"export/sprite_letters.bin"    400	412	2	1
 	@export		"res/char/font4x8.flf" 		"export/font4x8.bin"           0 	64
 
@@ -22,10 +21,9 @@ var
 	const addrCarBody:	address = $ba00;
 	const addrWheel:	address = addrCarBody + 96;
 	const addrGround:	address = addrWheel + 64;
-	const addrUpdown:	address = addrGround + 16;
+	const addrUpdown:	address = addrGround + 24;
 	const addrFont:		address = addrUpdown + 64;
-	const addrUpper:	address = addrFont + 512;
-	const addrLetters:	address = addrUpper + 64;
+	const addrLetters:	address = addrFont + 512;
 
 	// Virtual
 	const addrNumbers:	address = addrFont + 384;
@@ -36,7 +34,6 @@ var
 	groundTile: incbin("export/sprite_ground.bin", addrGround);
 	updownTile: incbin("export/sprite_updown.bin", addrUpdown);
 	smallFont: incbin("export/font4x8.bin", addrFont);
-	upperLevel: incbin("export/sprite_upperlevel.bin", addrUpper);
 	letterSprite: incbin("export/sprite_letters.bin", addrLetters);
 	
 	// Import music data. Made with Fisichella, song by Jojeli
@@ -55,19 +52,13 @@ var
 	
 	// Address-table for ground tiles
 	ground_T: array[] of integer = (
-		addrGround, addrGround + 8
+		addrGround, addrGround + 8, addrGround + 16
 	);
 
 	// Address-table for up'n'down tiles
 	updown_T: array[] of integer = (
 		addrUpDown, addrUpDown+8, addrUpDown+16, addrUpDown+24,
 		addrUpDown+32, addrUpDown+40, addrUpDown+48, addrUpDown+56
-	);
-
-	// Address-table for upper level tiles
-	upper_T: array[] of integer = (
-		addrUpper, addrUpper+8, addrUpper+16, addrUpper+24,
-		addrUpper+32, addrUpper+40, addrUpper+48, addrUpper+56
 	);
 
 
@@ -79,6 +70,18 @@ var
 		addrWheel+8, addrWheel+24, addrWheel+40, addrWheel+56
 	);
 
+	level_up1: array[] of byte = (
+		%00000001, 6,
+		%00000011, 4,
+		%00000010, 4,
+		%00000000, 4,
+		%00000000, 6,
+		%00000010, 8,
+		%00000001, 6,
+		%00000011, 4,
+		%00000000, 6,
+		%00000010, 8
+	); 
 
 	// Misc constants
 	const MULTICOLOR: byte = 8;
@@ -118,8 +121,47 @@ begin
 	dc.b $41,$30,$c3,$c2,$cd     ; Signature for cart autostart (a0CBM)
 	");
 end;
-
 @endblock
+
+// This just adds the correct unrolled ASM into code, not really a procedure
+procedure initscreenshift();
+begin
+    vbmInitScreenShiftLeft(3);
+end;
+
+
+// Linear-feedback shift register
+procedure lfsr();
+begin
+	asm("
+lfsr_rnd
+		lda lfsrval
+		lsr
+		bcc lfsr_noeor
+		eor #$B4
+lfsr_noeor
+		sta lfsrval
+	");
+end;
+
+procedure incdecground();
+begin
+	if (grndheight < updowntile) then dec(updowntile) else inc(updowntile);
+end;
+
+
+// Handle ground tile generation
+//
+procedure generate_ground();
+begin
+	if (grndheight = updowntile) then
+	begin
+		lfsr();
+		grndheight := (lfsrval >> 4) & 15;
+	end
+	else incdecground();
+	drawTree[d_grnd] := 1;
+end;
 
 // Interrupt function that handles all the screen drawing
 // starting from certain raster line to avoid flicker
@@ -130,9 +172,9 @@ begin
 	StartIRQ(0); 	
 	// Play song
 //				screen_bg_color := WHITE + SCREEN_BG_BLACK;
-	asm("    jsr MusicPlay");
+//	asm("    jsr MusicPlay");
 
-//				screen_bg_color := BLACK + SCREEN_BG_BLACK;
+//				screen_bg_color := RED + SCREEN_BG_BLACK;
 
 	// Clear previous car sprite
 	vbmSetPosition2(old_x, old_y + old_y_off+2);
@@ -146,48 +188,73 @@ begin
 
 //	if (scnt & 1) then
 	begin
-		vbmScreenShiftLeft(176,192);
-		vbmScreenShiftLeft(176,192);
+		vbmScreenShiftLeft(160,176);
+		vbmScreenShiftLeft(160,176);
 	end;
 
 	if (uscnt = 0) then
 	begin
-		vbmScreenShiftLeft(134,142);
-		vbmScreenShiftLeft(134,142);
+		vbmScreenShiftLeft(90,96);
+		vbmScreenShiftLeft(90,96);
+	end;
+
+	if (uscnt = 1) then
+	begin
+		vbmScreenShiftLeft(128,134);
+		vbmScreenShiftLeft(128,134);
 	end;
 
 	// Stars
-	if (bcnt = 0) then
-	begin
-		vbmScreenShiftLeft(50, 51);
-		vbmScreenShiftLeft(70, 71);
-		vbmScreenShiftLeft(90, 91);
-	end;
-	if (mcnt = 0) then
-	begin
-		vbmScreenShiftLeft(40, 41);
-		vbmScreenShiftLeft(60, 61);
-		vbmScreenShiftLeft(80, 81);
-	end;
+//	if (bcnt = 0) then
+//	begin
+//		vbmScreenShiftLeft(50, 51);
+//		vbmScreenShiftLeft(70, 71);
+//	end;
+//	if (mcnt = 0) then
+//	begin
+//		vbmScreenShiftLeft(40, 41);
+//		vbmScreenShiftLeft(60, 61);
+//		vbmScreenShiftLeft(80, 81);
+//	end;
 	
 	// Draw new ground piece
 	if (drawTree[d_grnd] = 1 and gcnt = 0) then
 	begin
-		vbmSetPosition2(152, 176);
-		p1 := int2ptr(updown_T[updowntile]);
-		vbmDrawTile(p1);
-		drawTree[d_grnd] := 0;
+		if (updowntile & 8) then
+		begin
+			vbmSetPosition2(152, 160);
+			p1 := int2ptr(updown_T[updowntile - 8]);
+			vbmDrawTile(p1);
+			vbmSetPosition2(152, 168);
+			p1 := int2ptr(ground_T[0]);
+			vbmDrawTile(p1);
+			drawTree[d_grnd] := 0;
+		end
+		else
+		begin
+			vbmSetPosition2(152, 160);
+			p1 := int2ptr(ground_T[1]);
+			vbmDrawTile(p1);
+			vbmSetPosition2(152, 168);
+			p1 := int2ptr(updown_T[updowntile]);
+			vbmDrawTile(p1);
+			drawTree[d_grnd] := 0;
+		end;
 	end;
 
 	// Draw new upper level piece
 	if (drawTree[d_upper] = 1 and ucnt = 0) then
 	begin
-		vbmSetPosition2(152, 134);
-		p1 := int2ptr(upper_T[uppertile]);
+		vbmSetPosition2(152, 128);
+		if ((upper1_dat & 1) = 0) then uppertile:=1 else uppertile:=2;
+		p1 := int2ptr(ground_T[uppertile]);
+		vbmDrawTile(p1);
+		vbmSetPosition2(152, 90);
+		if ((upper1_dat & 2) = 0) then uppertile:=1 else uppertile:=2;
+		p1 := int2ptr(ground_T[uppertile]);
 		vbmDrawTile(p1);
 		drawTree[d_upper] := 0;
 	end;
-
 
 	// Draw new car sprite
 	vbmSetPosition2(bx, by + y_off+2);
@@ -208,7 +275,7 @@ begin
 
 	// Increase counters
 	inc(scnt);
-	incrange(gcnt, 0, 4);
+	incrange(gcnt, 0, 3);
 	incrange(mcnt, 0, 2);
 	incrange(bcnt, 0, 3);
 	incrange(ucnt, 0, 16);
@@ -254,7 +321,7 @@ end;
 // Find ground offset at x+offset
 procedure find_ground(xoffset:byte at $3c);
 begin
-	for i := 0 to 8 do if (vbmTestPixel2(bx+xoffset, 175+i) = 0) then yoff := i;
+	for i := 0 to 16 do if (vbmTestPixel2(bx+xoffset, 159+i) = 0) then yoff := i;
 end;
 
 
@@ -288,35 +355,30 @@ restoreKey:
 	musicplayer(1);
 
 	// Initialize display mode to 19 column
-	vbmSetDisplayMode(1);
-	
+	vbmSetDisplayMode(3);
+//	vbmDebug(1);
+
 	// Clear VBM
 	vbmClear(0);
 	
 	// Clear color memory with WHITE and set MULTICOLOR flag
 	vbmClearColor(WHITE + MULTICOLOR);
+//	vbmClearColor(WHITE);
 	
 	// Set other colors, plus audio volume
 	AUX_COLOR_AND_VOLUME := RED * 15 + 15;
 	screen_bg_color := BLUE + SCREEN_BG_BLACK;
 
-	for i:=0 to 20 do
-	begin
-		vbmSetPosition2(i*8, 184);
-		p1 := int2ptr(ground_T[grndtile]);
-		vbmDrawTile(p1);
-		grndtile := grndtile xor 1;
-	end;
-
 	// Draw "stars"
-	fori i := 0 to 5 do
-	begin
-		vbmDrawDot((random() >> 2) + 8, 40 + (i * 10));
-		vbmDrawDot((random() >> 2) + 88 , 40 + (i * 10));
-	end;
+//	fori i := 0 to 4 do
+//	begin
+//		vbmDrawDot((random() >> 2) + 8, 40 + (i * 10));
+//		vbmDrawDot((random() >> 2) + 88 , 40 + (i * 10));
+//	end;
 
     // Draw "title" text
     vbmDrawSmallTextE(scoretitle, smallFont, 0, 0, 6);
+    vbmDrawSmallTextE(buggycount, smallFont, 28, 0, 10);
     
 	// Set upper two rows to hires single color
 	fill(screen_col_loc, WHITE, 20);
@@ -324,7 +386,7 @@ restoreKey:
 	// Set up an raster interrupt to call outside visible screen,
 	// params: IRQ function, raster line, PAL/NTSC (0/1)
 	DisableVIC20IRQ();
-	VIARasterIRQ(drawcar(), 124, 0);
+	VIARasterIRQ(drawcar(), 118, 0);
 
 
 	// Main game logic runs here in loop
@@ -353,8 +415,8 @@ restoreKey:
 						if (xdir = x_right) then buggy_right(1);
 						if (xdir = x_left) then buggy_left(1);
 						if (jdir = 0) then by:=by-2 else by:=by+2;
-						if (by < 110) then jdir := 1;
-						if (by = 156) then
+						if (by < 94) then jdir := 1;
+						if (by = 140) then
 						begin
 							jdir := 0;
 							state := s_stat;
@@ -379,22 +441,18 @@ restoreKey:
 
 		// Set up next ground tile when IRQ says ground needs new
 		// tile
-		if (drawTree[d_grnd] = 0) then
-		begin
-			drawTree[d_grnd] := 1;
-			updowntile := updowntile + updowndir;
-			if (updowntile = 7 or updowntile = 0) then begin
-				updowndir := updowndir xor 254;
-			end;
-		end;
+		if (drawTree[d_grnd] = 0) then generate_ground();
 
-		// Set up next upper level tile when IRQ says ground needs new
-		// tile
+		// Set up next upper level tile when IRQ says we need one
 		if (drawTree[d_upper] = 0) then
 		begin
-			uppertile := uppertile + upperdir;
-			if (uppertile = 7 or uppertile = 0) then begin
-				upperdir := upperdir xor 254;
+			dec(upper1_cnt);
+			if (upper1_cnt = 0) then
+			begin
+				upper1_dat := level_up1[upper1_ind];
+				upper1_cnt := level_up1[upper1_ind+1];
+				inc(upper1_ind);
+				incrange(upper1_ind, 0, 20);
 			end;
 			bcdadd(score, scoreadd, 3);
 			vbmdrawsmallbcd(score, addrNumbers, 6, 0, 3);

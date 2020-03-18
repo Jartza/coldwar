@@ -9,7 +9,7 @@ begin
 	ucnt := 0;
 	uscnt := 0;
 	bx := 50;
-	by := 156;
+	by := 70;
 	y_off := 0;
 	wh_y := 156;
 	wr_y_off := 0;
@@ -23,12 +23,12 @@ begin
 	i := 0;
 	t := 0;
 	xdir := 0;
-	state := 0;
+	state := s_jump;
 	yoff := 0;
-	jdir := 0;
+	jdir := 1;
 	grndtile := 0;
-	updowntile := 0;
-	updowndir := 1;
+	updowntile := 1;
+	grndheight := 15;
 	uppertile := 0;
 	upperdir := 1;
 	
@@ -43,4 +43,10 @@ begin
 	score[0] := 0;
 	score[1] := 0;
 	score[2] := 0;
+	
+	lfsrval := 170;
+	
+	upper1_cnt := 1;
+	upper1_dat := 0;
+	upper1_ind := 0;
 end;

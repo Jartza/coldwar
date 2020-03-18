@@ -60,7 +60,7 @@
 	// Game main loop state-machine state
 	state: byte at $55;
 
-	// Generic pointer, used for tile drawing
+	// Generic pointers, used for tile drawing
 	p1: pointer;
 
 	// Used for y offset calculations
@@ -72,12 +72,21 @@
 	// Some misc stuff, probably to be removed later
 	grndtile: byte at $58;
 	updowntile: byte at $59;
-	updowndir: byte at $5a;
+	grndheight: byte at $5a;
 	uppertile: byte at $5b;
 	upperdir: byte at $5c;
 	
+	// LFSR
+	lfsrval: byte at $5d;
+	
+	// Upper platforms
+	upper1_cnt: byte at $1ec0;
+	upper1_dat: byte at $1ec1;
+	upper1_ind: byte at $1ec2;
+
 	// Can be in ROM
     scoretitle: cstring = ("SCORE:");
+    buggycount: cstring = ("[[[[[[[[[[");
 
 	// Fisichella player variables in tape buffer.
 	// Not reserved (hardcoded in asm), just shown as a reminder
