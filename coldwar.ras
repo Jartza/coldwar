@@ -159,7 +159,7 @@ begin
 	if (grndheight = updowntile) then
 	begin
 		lfsr();
-		grndheight := (lfsrval >> 4) & 15;
+		grndheight := lfsrval & 15;
 	end
 	else incdecground();
 	drawTree[d_grnd] := 1;
@@ -188,26 +188,29 @@ begin
 
 	// Clear previous car sprite
 	vbmSetPosition2(old_x, old_y + old_y_off+2);
-	vbmDrawSprite2E(carbody_L, carbody_M, carbody_R);
+	vbmClearSprite2(carbody_L, carbody_M, carbody_R);
 	
 	// Clear old wheels
 	vbmSetPosition2(old_x, old_wh_y + old_wl_y_off + 10);
-	vbmDrawSprite8E(wheel_L, wheel_R);
+	vbmClearSprite8(wheel_L, wheel_R);
 	vbmSetPosition2(old_x+10, old_wh_y + old_wr_y_off + 10);
-	vbmDrawSprite8E(wheel_L, wheel_R);
+	vbmClearSprite8(wheel_L, wheel_R);
+
+
+@ifdef SHOW_RASTER
+	screen_bg_color := PURPLE + SCREEN_BG_BLACK;
+@endif
 
 	// Scroll ground
-	if (uscnt & 1) then
-	begin
-		vbmScreenShiftLeft(160,176);
-		vbmScreenShiftLeft(160,176);
-		vbmScreenShiftLeft(160,176);
-		vbmScreenShiftLeft(160,176);
-	end;
+	vbmScreenShiftLeft(160,176);
+	vbmScreenShiftLeft(160,176);
 
 	// Scroll upper platform
 	if (uscnt = 0) then
 	begin
+@ifdef SHOW_RASTER
+	screen_bg_color := YELLOW + SCREEN_BG_BLACK;
+@endif
 		vbmScreenShiftLeft(90,96);
 		vbmScreenShiftLeft(90,96);
 	end;
@@ -215,9 +218,17 @@ begin
 	// Scroll middle platform
 	if (uscnt = 2) then
 	begin
+@ifdef SHOW_RASTER
+	screen_bg_color := GREEN + SCREEN_BG_BLACK;
+@endif
 		vbmScreenShiftLeft(128,134);
 		vbmScreenShiftLeft(128,134);
 	end;
+
+@ifdef SHOW_RASTER
+	screen_bg_color := RED + SCREEN_BG_BLACK;
+@endif
+
 
 	// Draw new ground piece
 	if (drawTree[d_grnd] = 1 and gcnt = 0) then
@@ -267,6 +278,7 @@ begin
 	vbmDrawSprite8E(wheel_L, wheel_R);
 	vbmSetPosition2(bx + 10, wh_y + wr_y_off + 10);
 	vbmDrawSprite8E(wheel_L, wheel_R);
+
 	drawTree[d_car] := 0;
 	old_x := bx;
 	old_y := by;
@@ -407,15 +419,24 @@ restoreKey:
 				// Stationery
 				s_stat:
 					begin
+						@ifdef SHOW_RASTER
+							screen_bg_color := BLACK + SCREEN_BG_BLACK;
+						@endif
 						xdir := x_none;
 						if (joy1 & JOY_RIGHT) then buggy_right(2);
 						if (joy1 & JOY_LEFT) then buggy_left(2);
 						if (joy1 & JOY_UP) then state := s_jump;
 						drawTree[d_car] := 1;
+						@ifdef SHOW_RASTER
+							screen_bg_color := BLUE + SCREEN_BG_BLACK;
+						@endif
 					end;
 				// In jump
 				s_jump:
 					begin
+						@ifdef SHOW_RASTER
+							screen_bg_color := BLACK + SCREEN_BG_BLACK;
+						@endif
 						if (xdir = x_right) then buggy_right(1);
 						if (xdir = x_left) then buggy_left(1);
 						if (jdir = 0) then by:=by-2 else by:=by+2;
@@ -427,6 +448,9 @@ restoreKey:
 						end;
 
 						drawTree[d_car] := 1;
+						@ifdef SHOW_RASTER
+							screen_bg_color := BLUE + SCREEN_BG_BLACK;
+						@endif
 					end;
 			end;
 
