@@ -159,7 +159,7 @@ begin
 	if (grndheight = updowntile) then
 	begin
 		lfsr();
-		grndheight := lfsrval & 15;
+		grndheight := lfsrval >> 4;
 	end
 	else incdecground();
 	drawTree[d_grnd] := 1;
