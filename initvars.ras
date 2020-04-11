@@ -5,12 +5,12 @@ begin
 	buggy.sus_y := 0;
 	buggy.sus_wy := 2;
 
-	scnt := 0;
-	gcnt := 0;
-	mcnt := 0;
-	bcnt := 0;
-	ucnt := 0;
-	uscnt := 0;
+	count.s := 0;
+	count.g := 0;
+	count.m := 0;
+	count.b := 0;
+	count.u := 0;
+	count.t := 0;
 	buggy.y_off := 0;
 	buggy.wh_y := 156;
 	buggy.wr_y_off := 0;

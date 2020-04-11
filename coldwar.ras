@@ -1,7 +1,7 @@
 program ColdWar;
 
 //@define SHOW_RASTER;
-@define PLAY_MUSIC;
+//@define PLAY_MUSIC;
 
 @donotremove cartAutostart
 @donotremove initscreenshift
@@ -212,7 +212,7 @@ begin
 	vbmScreenShiftLeft(160,176);
 
 	// Scroll upper platform
-	if (uscnt = 0) then
+	if (count.t = 0) then
 	begin
 @ifdef SHOW_RASTER
 	screen_bg_color := YELLOW + SCREEN_BG_BLACK;
@@ -222,7 +222,7 @@ begin
 	end;
 
 	// Scroll middle platform
-	if (uscnt = 2) then
+	if (count.t = 2) then
 	begin
 @ifdef SHOW_RASTER
 	screen_bg_color := GREEN + SCREEN_BG_BLACK;
@@ -237,7 +237,7 @@ begin
 
 
 	// Draw new ground piece
-	if (drawTree[d_grnd] = 1 and gcnt = 0) then
+	if (drawTree[d_grnd] = 1 and count.g = 0) then
 	begin
 		if (updowntile & 8) then
 		begin
@@ -262,7 +262,7 @@ begin
 	end;
 
 	// Draw new upper level piece
-	if (drawTree[d_upper] = 1 and ucnt = 0) then
+	if (drawTree[d_upper] = 1 and count.u = 0) then
 	begin
 		vbmSetPosition2(152, 128);
 		uppertile := (upper1_dat & 1) + 1;
@@ -294,12 +294,12 @@ begin
 	buggy.old_wr_y_off := buggy.wr_y_off;
 
 	// Increase counters
-	inc(scnt);
-	incrange(gcnt, 0, 3);
-	incrange(mcnt, 0, 2);
-	incrange(bcnt, 0, 3);
-	incrange(ucnt, 0, 16);
-	incrange(uscnt, 0, 4);
+	inc(count.s);
+	incrange(count.g, 0, 3);
+	incrange(count.m, 0, 2);
+	incrange(count.b, 0, 3);
+	incrange(count.u, 0, 16);
+	incrange(count.t, 0, 4);
 
 @ifdef SHOW_RASTER
 	screen_bg_color := BLUE + SCREEN_BG_BLACK;
@@ -343,7 +343,7 @@ end;
 // Find ground offset at x+offset
 procedure find_ground(xoffset:byte at $3c);
 begin
-	for i := 0 to 16 do if (vbmTestPixel2(buggy.x + xoffset, 159+i) = 0) then buggy.y_off := i;
+	for i := 0 to 16 do if (vbmTestPixel2(buggy.x + xoffset, 159+i) = 0) then yoff := i;
 end;
 
 
@@ -419,7 +419,7 @@ restoreKey:
 
 		// Handle buggy drawing and moving when IRQ says the car has
 		// been redrawn
-		if (drawTree[d_car] = 0 and mcnt = 0) then
+		if (drawTree[d_car] = 0 and count.m = 0) then
 		begin
 			case state of
 				// Stationery

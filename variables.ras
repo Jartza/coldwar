@@ -19,42 +19,42 @@
 		sus_wy			: byte;
 	end;
 
-	buggy: buggyRec at $3f;
+	countRec = record
+		s 				: byte;
+		g				: byte;
+		m				: byte;
+		b				: byte;
+		u				: byte;
+		t				: byte;
+	end;
 
-	@startblock $4f "zerovars"
-	// Global variables for all the game logic
-	scnt: byte;
-	gcnt: byte;
-	mcnt: byte;
-	bcnt: byte;
-	ucnt: byte;
-	uscnt: byte;
+	buggy: buggyRec at $3f;
+	count: countRec at $4f;
 
 	// Loop and temp variables, 
 	// t used inside IRQ, i used outside IRQ
-	i: byte;
-	t: byte;
+	i: byte at $55;
+	t: byte at $56;
 
 	// x direction during jump
-	xdir: byte;
-	yoff: byte;
+	xdir: byte at $57;
+	yoff: byte at $58;
 
 	// Game main loop state-machine state
-	state: byte;
+	state: byte at $59;
 
 	// Jump direction
-	jdir: byte;
+	jdir: byte at $5a;
 
 	// Some misc stuff, probably to be removed later
-	grndtile: byte;
-	updowntile: byte;
-	grndheight: byte;
-	uppertile: byte;
-	upperdir: byte;
+	grndtile: byte at $5b;
+	updowntile: byte at $5c;
+	grndheight: byte at $5d;
+	uppertile: byte at $5e;
+	upperdir: byte at $5f;
 	
 	// LFSR
-	lfsrval: byte;
-	@endblock
+	lfsrval: byte at $60;
 
 	// Generic pointers, used for tile drawing
 	p1: pointer;
