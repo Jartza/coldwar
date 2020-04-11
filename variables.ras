@@ -1,7 +1,64 @@
 	// Fisichella player zero page variables
 	//
 	// fis1 .. fis4 = $36 .. $39
+	buggyRec = record
+		x 				: byte;
+		y 				: byte;
+		old_x			: byte;
+		old_y			: byte;
+		y_off 			: byte;
+		wh_y			: byte;
+		wh_x			: byte;
+		wr_y_off		: byte;
+		wl_y_off		: byte;
+		old_y_off		: byte;
+		old_wh_y		: byte;
+		old_wr_y_off	: byte;
+		old_wl_y_off	: byte;
+		sus_y			: byte;
+		sus_wy			: byte;
+	end;
 
+	buggy: buggyRec at $3a;
+
+	@startblock $4a "zerovars"
+	// Global variables for all the game logic
+	scnt: byte;
+	gcnt: byte;
+	mcnt: byte;
+	bcnt: byte;
+	ucnt: byte;
+	uscnt: byte;
+
+	// Loop and temp variables, 
+	// t used inside IRQ, i used outside IRQ
+	i: byte;
+	t: byte;
+
+	// x direction during jump
+	xdir: byte;
+	yoff: byte;
+
+	// Game main loop state-machine state
+	state: byte;
+
+	// Jump direction
+	jdir: byte;
+
+	// Some misc stuff, probably to be removed later
+	grndtile: byte;
+	updowntile: byte;
+	grndheight: byte;
+	uppertile: byte;
+	upperdir: byte;
+	
+	// LFSR
+	lfsrval: byte;
+	@endblock
+
+	// Generic pointers, used for tile drawing
+	p1: pointer;
+	
 	// Drawtree array which handles what to redraw
 	drawTree: array[3] of byte at $033c;
 
@@ -13,72 +70,6 @@
     // Can be in ROM
     scoreadd: array[] of byte = ($01, $00, $00);
 
-	// Suspension buffer vars
-	sus_y: byte at $3d;
-	sus_wy: byte at $3f;
-
-
-	// Global variables for all the game logic
-	scnt: byte at $40;
-	gcnt: byte at $41;
-	mcnt: byte at $42;
-	bcnt: byte at $43;
-	ucnt: byte at $44;
-	uscnt: byte at $45;
-	
-	// Buggy body coordinates, pretty
-	// straightforward x and y and y offset
-	bx: byte at $46;
-	by: byte at $47;
-	y_off: byte at $48;
-	
-	// Buggy wheels coordinates,
-	// y coordinate and offset for each wheel.
-	// x is calculated from body
-	wh_y: byte at $49;        // generic wheel y coordinate
-	wr_y_off: byte at $4a;    // right wheel y offset
-	wl_y_off: byte at $4b;    // left wheel y offset
-
-	// Storage space for old coordinates,
-	// which are used to clear old graphics before
-	// drawing new one
-	old_x: byte at $4c;
-	old_y: byte at $4d;
-	old_y_off: byte at $4e;
-	old_wh_y: byte at $4f;
-	old_wr_y_off: byte at $50;		// old right wheel y offset
-	old_wl_y_off: byte at $51;		// old left wheel y offset
-
-	// Loop and temp variables, 
-	// t used inside IRQ, i used outside IRQ
-	i: byte at $52;
-	t: byte at $53;
-
-	// x direction during jump
-	xdir: byte at $54;
-
-	// Game main loop state-machine state
-	state: byte at $55;
-
-	// Generic pointers, used for tile drawing
-	p1: pointer;
-
-	// Used for y offset calculations
-	yoff: byte at $56;
-
-	// Jump direction
-	jdir: byte at $57;
-
-	// Some misc stuff, probably to be removed later
-	grndtile: byte at $58;
-	updowntile: byte at $59;
-	grndheight: byte at $5a;
-	uppertile: byte at $5b;
-	upperdir: byte at $5c;
-	
-	// LFSR
-	lfsrval: byte at $5d;
-	
 	// Upper platforms
 	upper1_cnt: byte at $1ec0;
 	upper1_dat: byte at $1ec1;

@@ -1,12 +1,17 @@
 program ColdWar;
-var
-	//@define SHOW_RASTER;
-	//@define PLAY_MUSIC;
-	
-	// Create images for eprom burning (for 16kB cartridge)
-	@exportprg2bin "coldwar.prg" "eprom2000.bin" $2000 $4000
-	@exportprg2bin "coldwar.prg" "eproma000.bin" $a000 $c000
 
+//@define SHOW_RASTER;
+@define PLAY_MUSIC;
+
+@donotremove cartAutostart
+@donotremove initscreenshift
+
+// Create images for eprom burning (for 16kB cartridge)
+@exportprg2bin "coldwar.prg" "eprom2000.bin" $2000 $4000
+@exportprg2bin "coldwar.prg" "eproma000.bin" $a000 $c000
+
+
+var
 	// Address of bitmap (screen and characters)
 	@userdata $1000 $1FFF "VBM Bitmap"
 
@@ -125,7 +130,8 @@ begin
 end;
 @endblock
 
-// This just adds the correct unrolled ASM into code, not really a procedure
+// This just adds the correct unrolled ASM into code, not really a procedure.
+// Also tell compiler not to remove this
 procedure initscreenshift();
 begin
     vbmInitScreenShiftLeft(3);
@@ -159,7 +165,7 @@ begin
 	if (grndheight = updowntile) then
 	begin
 		lfsr();
-		grndheight := lfsrval >> 4;
+		grndheight := lfsrval >> 2 & 15;
 	end
 	else incdecground();
 	drawTree[d_grnd] := 1;
@@ -187,13 +193,13 @@ begin
 @endif
 
 	// Clear previous car sprite
-	vbmSetPosition2(old_x, old_y + old_y_off+2);
+	vbmSetPosition2(buggy.old_x, buggy.old_y + buggy.old_y_off+2);
 	vbmClearSprite2(carbody_L, carbody_M, carbody_R);
 	
 	// Clear old wheels
-	vbmSetPosition2(old_x, old_wh_y + old_wl_y_off + 10);
+	vbmSetPosition2(buggy.old_x, buggy.old_wh_y + buggy.old_wl_y_off + 10);
 	vbmClearSprite8(wheel_L, wheel_R);
-	vbmSetPosition2(old_x+10, old_wh_y + old_wr_y_off + 10);
+	vbmSetPosition2(buggy.old_x+10, buggy.old_wh_y + buggy.old_wr_y_off + 10);
 	vbmClearSprite8(wheel_L, wheel_R);
 
 
@@ -270,22 +276,22 @@ begin
 	end;
 
 	// Draw new car sprite
-	vbmSetPosition2(bx, by + y_off+2);
+	vbmSetPosition2(buggy.x, buggy.y + buggy.y_off+2);
 	vbmDrawSprite2(carbody_L, carbody_M, carbody_R);
 	
 	// Draw wheels
-	vbmSetPosition2(bx, wh_y + wl_y_off + 10);
+	vbmSetPosition2(buggy.x, buggy.wh_y + buggy.wl_y_off + 10);
 	vbmDrawSprite8E(wheel_L, wheel_R);
-	vbmSetPosition2(bx + 10, wh_y + wr_y_off + 10);
+	vbmSetPosition2(buggy.x + 10, buggy.wh_y + buggy.wr_y_off + 10);
 	vbmDrawSprite8E(wheel_L, wheel_R);
 
 	drawTree[d_car] := 0;
-	old_x := bx;
-	old_y := by;
-	old_y_off := y_off;
-	old_wh_y := wh_y;
-	old_wl_y_off := wl_y_off;
-	old_wr_y_off := wr_y_off;
+	buggy.old_x := buggy.x;
+	buggy.old_y := buggy.y;
+	buggy.old_y_off := buggy.y_off;
+	buggy.old_wh_y := buggy.wh_y;
+	buggy.old_wl_y_off := buggy.wl_y_off;
+	buggy.old_wr_y_off := buggy.wr_y_off;
 
 	// Increase counters
 	inc(scnt);
@@ -306,21 +312,21 @@ end;
 // Limit buggy x movement
 procedure limit_x();
 begin
-	if (bx < 8) then bx := 8;
-	if (bx > 120) then bx := 120;
+	if (buggy.x < 8) then buggy.x := 8;
+	if (buggy.x > 120) then buggy.x := 120;
 end;
 
 // Move buggy right
 procedure buggy_right(incamount:byte at $3a);
 begin
-	bx := bx + incamount;
+	buggy.x := buggy.x + incamount;
 	xdir := x_right;
 end;
 
 // Move buggy left
 procedure buggy_left(decamount:byte at $3b);
 begin
-	bx := bx - decamount;
+	buggy.x := buggy.x - decamount;
 	xdir := x_left;
 end;
 
@@ -328,16 +334,16 @@ end;
 procedure jumpsuspend();
 begin
 	// Suspension
-	suspension[sus_y] := by;
-	wh_y := suspension[sus_wy];
-	incrange(sus_y, 0, 3);
-	incrange(sus_wy, 0, 3);
+	suspension[buggy.sus_y] := buggy.y;
+	buggy.wh_y := suspension[buggy.sus_wy];
+	incrange(buggy.sus_y, 0, 3);
+	incrange(buggy.sus_wy, 0, 3);
 end;
 
 // Find ground offset at x+offset
 procedure find_ground(xoffset:byte at $3c);
 begin
-	for i := 0 to 16 do if (vbmTestPixel2(bx+xoffset, 159+i) = 0) then yoff := i;
+	for i := 0 to 16 do if (vbmTestPixel2(buggy.x + xoffset, 159+i) = 0) then buggy.y_off := i;
 end;
 
 
@@ -439,9 +445,9 @@ restoreKey:
 						@endif
 						if (xdir = x_right) then buggy_right(1);
 						if (xdir = x_left) then buggy_left(1);
-						if (jdir = 0) then by:=by-2 else by:=by+2;
-						if (by < 94) then jdir := 1;
-						if (by = 140) then
+						if (jdir = 0) then buggy.y := buggy.y - 2 else buggy.y := buggy.y + 2;
+						if (buggy.y < 94) then jdir := 1;
+						if (buggy.y = 140) then
 						begin
 							jdir := 0;
 							state := s_stat;
@@ -459,11 +465,11 @@ restoreKey:
 
 			// calculate new y offset for buggy and wheels
 			find_ground(8);
-			y_off := yoff;
+			buggy.y_off := yoff;
 			find_ground(4);
-			wl_y_off := yoff;
+			buggy.wl_y_off := yoff;
 			find_ground(14);
-			wr_y_off := yoff;
+			buggy.wr_y_off := yoff;
 			jumpsuspend();
 		end;
 

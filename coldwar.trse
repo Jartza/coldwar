@@ -47,5 +47,6 @@ exomizer_toggle = 0
 var_zeropages = ,$63
 data_header_res/char/font4x8.flf = 0
 via_zeropages = ,$60, $61, $62, $63
-override_target_settings_basic = 6.95312e-310
+override_target_settings_basic = 0
 ignore_initial_jump = 1
+remove_unused_symbols = 1
