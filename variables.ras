@@ -19,9 +19,9 @@
 		sus_wy			: byte;
 	end;
 
-	buggy: buggyRec at $3a;
+	buggy: buggyRec at $3f;
 
-	@startblock $4a "zerovars"
+	@startblock $4f "zerovars"
 	// Global variables for all the game logic
 	scnt: byte;
 	gcnt: byte;

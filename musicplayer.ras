@@ -1,4 +1,4 @@
-Procedure musicplayer(musicState:byte at $5d);
+Procedure musicplayer(musicState:byte at $3d);
 begin
 	case musicState of
 		0: asm("    jmp MusicPlay"); // Called in raster IRQ. Faster way: asm("    jsr MusicPlay");
