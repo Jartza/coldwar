@@ -7,14 +7,14 @@
 		old_x			: byte;
 		old_y			: byte;
 		y_off 			: byte;
-		wh_y			: byte;
-		wh_x			: byte;
-		wr_y_off		: byte;
-		wl_y_off		: byte;
+		wh_y				: byte;
+		wh_x				: byte;
+		wr_y_off			: byte;
+		wl_y_off			: byte;
 		old_y_off		: byte;
-		old_wh_y		: byte;
-		old_wr_y_off	: byte;
-		old_wl_y_off	: byte;
+		old_wh_y			: byte;
+		old_wr_y_off		: byte;
+		old_wl_y_off		: byte;
 		sus_y			: byte;
 		sus_wy			: byte;
 	end;
@@ -54,7 +54,8 @@
 	upperdir: byte at $5f;
 	
 	// LFSR
-	lfsrval: byte at $60;
+	lfsrval: integer at $60;
+	lfsrlow: byte at $62;
 
 	// Generic pointers, used for tile drawing
 	p1: pointer;

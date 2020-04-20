@@ -45,7 +45,8 @@ begin
 	score[1] := 0;
 	score[2] := 0;
 	
-	lfsrval := 170;
+	lfsrval := 31337;
+	lfsrlow := lo(lfsrval);
 	
 	upper1_cnt := 1;
 	upper1_dat := 0;

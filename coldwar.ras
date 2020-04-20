@@ -141,15 +141,9 @@ end;
 // Linear-feedback shift register
 procedure lfsr();
 begin
-	asm("
-lfsr_rnd
-		lda lfsrval
-		lsr
-		bcc lfsr_noeor
-		eor #$B4
-lfsr_noeor
-		sta lfsrval
-	");
+	lfsrval := lfsrval >> 1;
+	if (lfsrlow & 1) then lfsrval := lfsrval xor $d400;
+	lfsrlow := lo(lfsrval);
 end;
 
 procedure incdecground();
@@ -165,7 +159,7 @@ begin
 	if (grndheight = updowntile) then
 	begin
 		lfsr();
-		grndheight := lfsrval >> 2 & 15;
+		grndheight := lfsrlow & 15;
 	end
 	else incdecground();
 	drawTree[d_grnd] := 1;
