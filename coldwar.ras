@@ -1,7 +1,7 @@
 program ColdWar;
 
-//@define SHOW_RASTER;
-//@define PLAY_MUSIC;
+@define SHOW_RASTER;
+@define PLAY_MUSIC;
 
 @donotremove cartAutostart
 @donotremove initscreenshift
