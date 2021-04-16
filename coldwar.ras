@@ -3,13 +3,19 @@ program ColdWar;
 @define SHOW_RASTER;
 @define PLAY_MUSIC;
 
-@donotremove cartAutostart
+@VicMemoryConfig "all"
+@projectsettings "ignorebasicsysstart" 0
+@projectsettings "basicsysaddress" $1200
+@projectsettings "startaddress" $2000
+
+
 @donotremove initscreenshift
 
 // Create images for eprom burning (for 16kB cartridge)
 @exportprg2bin "coldwar.prg" "eprom2000.bin" $2000 $4000
 @exportprg2bin "coldwar.prg" "eproma000.bin" $a000 $c000
 
+@use "cart\cart"
 
 var
 	// Address of bitmap (screen and characters)
@@ -111,24 +117,25 @@ var
 // Include variables. Defined in zeropage and cassette buffer
 @include "variables.ras"
 
-// External procedures
-@include "musicplayer.ras"
-@include "initvars.ras"
-
 // This procedure is never actually called in the code, 
 // it contains the "cartridge autostart signature" and jump
 // address. block1 equals to main. This needs to be exactly
 // in address $a000 for it to work.
-@startblock $a000 "Block5"
+@startblock $A000 "cartAutostart"
+@donotremove cartAutostart
 procedure cartAutostart();
 begin
-	asm("
-	dc.b <block1,>block1         ; Cart reset start address
-	dc.b <restoreKey,>restoreKey ; Restore keypress jump address
-	dc.b $41,$30,$c3,$c2,$cd     ; Signature for cart autostart (a0CBM)
-	");
+
+	Cart::Autostart();
+	
 end;
 @endblock
+
+// External procedures
+@include "musicplayer.ras"
+@include "initvars.ras"
+
+
 
 // This just adds the correct unrolled ASM into code, not really a procedure.
 // Also tell compiler not to remove this
@@ -188,13 +195,13 @@ begin
 
 	// Clear previous car sprite
 	vbmSetPosition2(buggy.old_x, buggy.old_y + buggy.old_y_off+2);
-	vbmClearSprite2(carbody_L, carbody_M, carbody_R);
+	vbmClearSprite2(#carbody_L, #carbody_M, #carbody_R);
 	
 	// Clear old wheels
 	vbmSetPosition2(buggy.old_x, buggy.old_wh_y + buggy.old_wl_y_off + 10);
-	vbmClearSprite8(wheel_L, wheel_R);
+	vbmClearSprite8(#wheel_L, #wheel_R);
 	vbmSetPosition2(buggy.old_x+10, buggy.old_wh_y + buggy.old_wr_y_off + 10);
-	vbmClearSprite8(wheel_L, wheel_R);
+	vbmClearSprite8(#wheel_L, #wheel_R);
 
 
 @ifdef SHOW_RASTER
@@ -271,13 +278,13 @@ begin
 
 	// Draw new car sprite
 	vbmSetPosition2(buggy.x, buggy.y + buggy.y_off+2);
-	vbmDrawSprite2(carbody_L, carbody_M, carbody_R);
+	vbmDrawSprite2(#carbody_L, #carbody_M, #carbody_R);
 	
 	// Draw wheels
 	vbmSetPosition2(buggy.x, buggy.wh_y + buggy.wl_y_off + 10);
-	vbmDrawSprite8E(wheel_L, wheel_R);
+	vbmDrawSprite8E(#wheel_L, #wheel_R);
 	vbmSetPosition2(buggy.x + 10, buggy.wh_y + buggy.wr_y_off + 10);
-	vbmDrawSprite8E(wheel_L, wheel_R);
+	vbmDrawSprite8E(#wheel_L, #wheel_R);
 
 	drawTree[d_car] := 0;
 	buggy.old_x := buggy.x;
@@ -345,24 +352,7 @@ end;
 // game logic and joystick controls.
 begin
 	// Initialize system when run as cartridge
-	asm("
-		; Disable interrupts
-		sei
-		; Run kernal setup routines.
-		jsr $FD8D
-		jsr $FD52
-		jsr $FDF9
-restoreKey:
-		; Disable interrupts again (for Restore-key)
-		sei
-		jsr $E518
-		; Reset stack pointer
-		ldx #$ff
-		txs
-		; Prevent lower/uppercase swap
-		lda #$80
-		sta $0291
-	");
+	Cart::Init();
 
 	// Init variables
 	initVariables();
@@ -393,8 +383,8 @@ restoreKey:
 //	end;
 
     // Draw "title" text
-    vbmDrawSmallTextE(scoretitle, smallFont, 0, 0, 6);
-    vbmDrawSmallTextE(buggycount, smallFont, 28, 0, 10);
+    vbmDrawSmallTextE(#scoretitle, #smallFont, 0, 0, 6);
+    vbmDrawSmallTextE(#buggycount, #smallFont, 28, 0, 10);
     
 	// Set upper two rows to hires single color
 	fill(screen_col_loc, WHITE, 20);
@@ -482,8 +472,8 @@ restoreKey:
 				inc(upper1_ind);
 				incrange(upper1_ind, 0, 20);
 			end;
-			bcdadd(score, scoreadd, 3);
-			vbmdrawsmallbcd(score, addrNumbers, 6, 0, 3);
+			bcdadd(#score, #scoreadd, 3);
+			vbmdrawsmallbcd(#score, #addrNumbers, 6, 0, 3);
 			drawTree[d_upper] := 1;
 		end;
 
